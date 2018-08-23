@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.dmitrynikol.rest</groupId>
-  <artifactId>RESTfulApp</artifactId>
+  <groupId>com.hs.rest</groupId>
+  <artifactId>farmaclub</artifactId>
   <packaging>war</packaging>
   <version>1.0-SNAPSHOT</version>
-  <name>RESTfulApp Maven Webapp</name>
+  <name>FarmaClub Server</name>
   <url>http://maven.apache.org</url>
   
   <dependencies>
