@@ -18,7 +18,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import com.hs.model.User;
-import com.hs.util.ConexionDirecta;
+import com.hs.util.Configuracion;
+import java.io.File;
 import java.util.Map;
 import org.json.simple.JSONObject;
 
@@ -193,6 +194,55 @@ public class UserService {
                 }
             }
             
+            return Response.ok(resp).build();
+        }
+        //http://localhost:8080/restfull-web-services-app-master/rest/user/licencia
+        @GET
+        @Path("/licencia")
+	@Produces("application/pdf")
+        public Response getLicencia(){
+            String file_licencia = Configuracion.getConfig().getLicencia();
+            Response.ResponseBuilder response;
+            if(file_licencia.isEmpty() == false){
+                File file = new File(file_licencia);
+                if(file.exists()){                    
+                    response = Response.ok((Object) file);
+                    response.header("Content-Disposition",
+				"attachment; filename=licencia.pdf");
+                    return response.build();
+                }
+            }
+            response = Response.ok((Object) null);
+            response.status(99);
+            return response.build();
+        }
+        
+        @POST
+        @Path("/existeusu")
+        @Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response existeUsuario(Map<String, String> parametros) throws Exception {
+            JSONObject resp = new JSONObject();
+            if(!parametros.containsKey("usuario")){
+                resp.put("salida", 9);
+                resp.put("msj", "No encuentra parametros de entrada (usuario)");
+            }
+            else{
+                try{
+                    String usu = parametros.get("usuario");
+                    if(ControlUsuario.existeUsuario(usu)){
+                        resp.put("salida", 0);
+                        resp.put("msj", "Ya Existe el usuario en DB");
+                    }else{
+                        resp.put("salida", 1);
+                        resp.put("msj", "NO Existe el usuario en DB");
+                    }
+                }
+                catch(Exception e){
+                    resp.put("salida", 9);
+                    resp.put("msj", "Salida: " + e.toString());
+                }
+            }
             return Response.ok(resp).build();
         }
         
