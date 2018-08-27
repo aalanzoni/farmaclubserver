@@ -31,12 +31,26 @@ public class Configuracion {
     private static String db = "";
     private static String user = "";
     private static String pass = "";
+    private static String licencia = "";
     private static String salida_mail = "";
     private static String error_mail = "";
-    
+    private static String envia_error_mail = "";
     
     private Logger logger;
-
+    
+    private static Configuracion config;
+    
+    public static Configuracion getConfig(){
+        if(config == null){
+            config = new Configuracion();
+            System.out.println("nueva configuracion");
+        }
+        else{
+            System.out.println("configuracion activa");
+        }
+        return config;
+    }
+            
     
     
     public Configuracion() {
@@ -63,8 +77,10 @@ public class Configuracion {
             db = propiedades.get("base").toString();
             user = propiedades.get("usuario").toString();
             pass = propiedades.get("pass").toString();
+            licencia = propiedades.get("licencia").toString();
             salida_mail = propiedades.get("salida_mail").toString();
             error_mail = propiedades.get("error_mail").toString();
+            envia_error_mail = propiedades.get("envia_error_mail").toString();
             
             try {
                 FileHandler fileHandler = new FileHandler(Configuracion.getLog(), true);
@@ -84,7 +100,9 @@ public class Configuracion {
     }
     
     public static void main(String a[]){
-        Configuracion c = new Configuracion();
+        Configuracion.getConfig();
+        Configuracion.getConfig();
+        Configuracion.getConfig();
     }
     
     
@@ -156,4 +174,13 @@ public class Configuracion {
     public static String getError_mail() {
         return error_mail;
     }    
+
+    public static String getEnvia_error_mail() {
+        return envia_error_mail;
+    }
+
+    public static String getLicencia() {
+        return licencia;
+    }
 }
+

@@ -23,7 +23,8 @@ public class ConexionDirecta {
     
     private ConexionDirecta(){
         try {
-            conf = new Configuracion();
+            conf = Configuracion.getConfig();
+            
             String connectionUrl = conf.getDriver() + "//";
             connectionUrl += conf.getServer();
             if(conf.getInstancia().length() > 1){
@@ -62,38 +63,7 @@ public class ConexionDirecta {
         return this.conexion;
     }
             
-    
-
-    
-//    public static Connection getConexion(){
-//        if(conexion == null){
-//            try {
-//                conf = new Configuracion();
-//                String connectionUrl = conf.getDriver() + "//";
-//                connectionUrl += conf.getServer();
-//                if(conf.getInstancia().length() > 1){
-//                    connectionUrl += "\\" + conf.getInstancia() + ";";
-//                }
-//                else{
-//                    connectionUrl +=  ":" + conf.getPuerto() + ";";
-//                }
-//                connectionUrl += "database=" + conf.getDb()+ ";";
-//                connectionUrl += "username=" + conf.getUser() + ";";
-//                connectionUrl += "password=" + conf.getPass();
-//                                
-//                conf.getLogger().log(Level.INFO, "URL: "+connectionUrl);
-//                conexion = DriverManager.getConnection(connectionUrl);
-//                conf.getLogger().log(Level.INFO, "CONEXION ESTABLECIDA");
-//            } 
-//            catch (SQLException ex){
-//                conf.getLogger().log(Level.SEVERE,"ERROR EN CONEXIONA A DB",ex);
-//            }
-//        }
-//        else
-//            conf.getLogger().log(Level.INFO, "RETORNA CONEXION ACTIVA");
-//        return conexion;
-//    }
-    
+     
     public static void main (String a[]){
         try{
             
@@ -112,3 +82,4 @@ public class ConexionDirecta {
         }
     }
 }
+
