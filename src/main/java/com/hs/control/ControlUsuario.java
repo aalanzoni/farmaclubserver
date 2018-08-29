@@ -6,10 +6,19 @@
 package com.hs.control;
 
 import com.hs.util.ConexionDirecta;
+import com.hs.util.Constantes;
+import com.hs.util.Mail;
+import com.hs.util.Utilidades;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Stack;
+import java.util.stream.IntStream;
 import org.json.simple.JSONObject;
 
 
@@ -28,7 +37,6 @@ public final class ControlUsuario {
         ResultSet rs = null;
         JSONObject resul = new JSONObject();
         try{
-            //ConexionDirecta cd = new ConexionDirecta();
             ConexionDirecta con = ConexionDirecta.getConexion();
             
             if(con != null){
@@ -41,20 +49,20 @@ public final class ControlUsuario {
                         if(existe == 1){
                             resul.put("existe", 1);
                             resul.put("usuario", rs.getString("nom_datos9"));
-                            resul.put("salida", "OK");
+                            resul.put("salida", 1);
                             resul.put("msj", "Tarjeta Localizada");
                         }
                         else{
                             resul.put("existe", 0);
                             resul.put("usuario", "");
-                            resul.put("salida", 9);
+                            resul.put("salida", 1);
                             resul.put("msj", "Tarjeta no Encontrada");
                         }
                     }
                 else{//no hay resultados
                     resul.put("existe", 0);
                     resul.put("usuario", "");
-                    resul.put("salida", 9);
+                    resul.put("salida", 1);
                     resul.put("msj", "Tarjeta no Encontrada");
                 }
             }
@@ -75,15 +83,141 @@ public final class ControlUsuario {
         return resul;
     }
     
+    public JSONObject resetPass(String tarjeta) throws Exception{
+        JSONObject resul = new JSONObject();
+        Statement stmt = null;
+        ResultSet rs = null;
+        try{
+            ConexionDirecta con = ConexionDirecta.getConexion();
+            if(con != null){
+                String sql = "select mail_datos9 as correo from datos9 (nolock) where codtar_datos9 = '"+ 
+                        tarjeta + 
+                        "' and estado_datos9 = 1";
+                stmt = con.getConnection().createStatement();
+                rs = stmt.executeQuery(sql);
+                if(rs.isBeforeFirst()){
+                    while (rs.next()) {
+                        String correo = rs.getString("correo");
+                        if(!correo.isEmpty()){
+                            if(!Utilidades.validarMail(correo)){
+                                JSONObject aux = this.asignaUserPass(correo, tarjeta);
+                                String user = aux.get("user").toString();
+                                String pass = aux.get("pass").toString();
+                                sql = "update DATOS9 set usuario_datos9 = '"+
+                                        user +
+                                        "', password_datos9 = '"+
+                                        pass +
+                                        "' where codtar_datos9 = '147' and estado_datos9 = 1";
+                                
+                                stmt.executeQuery(sql);
+                                
+                                Stack<String> destinatarios = new Stack<String>();
+                                destinatarios.add(correo);
+                                Thread hilo = new Thread(new Mail(destinatarios, null, null, null, tarjeta, user, pass, Constantes.MAIL_PASS_CHANG));
+                                hilo.start();
+                                
+                                resul.put("salida", 1);
+                                resul.put("usuario", user);
+                                resul.put("pass", pass);
+                                resul.put("msj", "Reseteo OK");
+                                resul.put("mail", correo);
+                                resul.put("reiniciar", 1);
+                                System.out.println("Todo OK!!!");
+                            }
+                            else{//correo invalido
+                                resul.put("salida", 4);
+                                resul.put("usuario", "");
+                                resul.put("pass", "");
+                                resul.put("msj", "Correo invalido: " + correo);
+                                resul.put("mail", correo);
+                                resul.put("reiniciar", 0);
+                                System.out.println("Correo invalido");
+                            }
+                        }
+                        else{//No hay correo
+                            resul.put("salida", 3);
+                            resul.put("usuario", "");
+                            resul.put("pass", "");
+                            resul.put("msj", "No hay correo asociado a la Tarjeta");
+                            resul.put("mail", "");
+                            resul.put("reiniciar", 0);
+                            System.out.println("No hay correo");
+                        }
+                    }
+                }
+                else{//No hay resultados
+                    resul.put("salida", 2);
+                    resul.put("usuario", "");
+                    resul.put("pass", "");
+                    resul.put("msj", "No Existe la tarjeta o esta inhabilitada");
+                    resul.put("mail", "");
+                    resul.put("reiniciar", 0);
+                    System.out.println("No hay tarjeta");
+                }
+            }
+        }
+        catch(Exception e){
+            throw e;
+        }
+        finally{
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) { } // ignore
+
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) { } // ignore
+
+                stmt = null;
+            }            
+            return resul;
+        }
+        
+    }
+    
+    private JSONObject asignaUserPass(String correo, String tarjeta) throws Exception{
+        JSONObject login = new JSONObject();
+        List<String> im = Arrays.asList(correo.split("@"));
+        
+        String user = im.get(0);
+        
+        //Validamos que el usuario sea unico.
+        int i = 0;
+        while(this.existeUsuario(user, tarjeta)){
+            user += Integer.toString(i);
+        }
+        
+        String pass = "";
+        Random random = new Random();
+        IntStream is = random.ints(4, 0, 9);     
+        Iterator iterator = is.iterator();
+        while (iterator.hasNext()){
+            pass += iterator.next().toString();
+        }
+        
+        login.put("user", user);
+        login.put("pass", pass);
+        
+        System.out.println("user: " + user);
+        System.out.println("pass: " + pass);
+        
+        return login;
+    }
+    
     public static int getPuntos (String tarjeta) throws Exception{
         Statement stmt = null;
         ResultSet rs = null;
         int puntos = 0;
         try{
-            //ConexionDirecta cd = new ConexionDirecta();
             ConexionDirecta con = ConexionDirecta.getConexion();
             if(con != null){
-                String sql = "SELECT sum(puntos_hiscre) as puntos FROM HISCRE (nolock) where codtar_hiscre = '" + tarjeta +"'"; 
+                String sql = "SELECT sum(puntos_hiscre) as puntos FROM HISCRE (nolock) where codtar_hiscre = '" + tarjeta +"'";
+                //estado_hiscre = ' ' or estado_hiscre is null
                 stmt = con.getConnection().createStatement();
                 rs = stmt.executeQuery(sql);
 
@@ -122,9 +256,10 @@ public final class ControlUsuario {
             String pass = parametros.get("pass").toString();
             System.out.println(tarjeta + user + pass);
 
-            if(ControlUsuario.existeUsuario(user)){
+            if(ControlUsuario.existeUsuario(user, null)){
                 System.out.println("Existe");
                 resultado.put("salida", 9);
+                resultado.put("actualizaciones", 0);
                 resultado.put("msj", "Ya existe el usuario ingresado");
                 return resultado;
             }
@@ -152,6 +287,7 @@ public final class ControlUsuario {
             System.out.println("VendorError: " + ex.getErrorCode());
 
             resultado.put("salida", 9);
+            resultado.put("actualizaciones", 0);
             resultado.put("msj", "Error al actualizar usuario "+ ex.getMessage());
         }
         finally {
@@ -174,7 +310,7 @@ public final class ControlUsuario {
         return resultado;
     }
     
-    public static boolean existeUsuario(String usuario) throws Exception {
+    public static boolean existeUsuario(String usuario, String tarjeta) throws Exception {
         boolean res = true;
         ResultSet rs = null;
         Statement stmt = null;
@@ -182,6 +318,10 @@ public final class ControlUsuario {
             ConexionDirecta c = ConexionDirecta.getConexion();
             stmt = c.getConnection().createStatement();
             String sql = "select 1 as existe from datos9(nolock) where usuario_datos9 = '" + usuario + "' and estado_datos9 = 0";
+            
+            if (tarjeta != null)
+                sql += " and codtar != '"+tarjeta+"'";
+            
             rs = stmt.executeQuery(sql);
             if(rs.isBeforeFirst())
                 while (rs.next()) {
@@ -265,15 +405,23 @@ public final class ControlUsuario {
     }
     
     public static void main (String args[]){
+        
         ControlUsuario cu = new ControlUsuario();
-        String tarjeta = "12345678";
-        System.out.println("Tarjeta: "+tarjeta);
         try{
-            System.out.println("Puntos: " + cu.getPuntos(tarjeta));
+            cu.resetPass("147444");
         }
         catch(Exception e){
             e.printStackTrace();
         }
+        
+//        String tarjeta = "12345678";
+//        System.out.println("Tarjeta: "+tarjeta);
+//        try{
+//            System.out.println("Puntos: " + cu.getPuntos(tarjeta));
+//        }
+//        catch(Exception e){
+//            e.printStackTrace();
+//        }
     }
 }
 

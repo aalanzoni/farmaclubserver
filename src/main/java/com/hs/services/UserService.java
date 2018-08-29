@@ -151,7 +151,7 @@ public class UserService {
             return Response.ok(resp).build();
         }
         
-        //http://localhost:8080/restfull-web-services-app-master/rest/user/valida
+        //http://localhost:8080/restfull-web-services-app-master/rest/user/validaIni
         @POST
         @Path("/validaIni")
         @Consumes(MediaType.APPLICATION_JSON)
@@ -216,7 +216,7 @@ public class UserService {
             response.status(99);
             return response.build();
         }
-        
+        //http://localhost:8080/restfull-web-services-app-master/rest/user/existeusu
         @POST
         @Path("/existeusu")
         @Consumes(MediaType.APPLICATION_JSON)
@@ -230,7 +230,7 @@ public class UserService {
             else{
                 try{
                     String usu = parametros.get("usuario");
-                    if(ControlUsuario.existeUsuario(usu)){
+                    if(ControlUsuario.existeUsuario(usu, null)){
                         resp.put("salida", 0);
                         resp.put("msj", "Ya Existe el usuario en DB");
                     }else{
@@ -246,6 +246,7 @@ public class UserService {
             return Response.ok(resp).build();
         }
         
+        //http://localhost:8080/restfull-web-services-app-master/rest/user/actualiza        
         @POST
         @Path("/actualiza")
         @Consumes(MediaType.APPLICATION_JSON)
@@ -280,10 +281,9 @@ public class UserService {
             JSONObject resp = new JSONObject();
             
             if(!parametros.containsKey("tarjeta")){
-                
+                resp.put("existe", 0);
+                resp.put("usuario", "");
                 resp.put("salida", 9);
-                resp.put("tarjeta", "");
-                resp.put("nombre", "");                
                 resp.put("msj", "No encuentra parametros de entrada (Tarjeta)");
                 
                 return Response.ok(resp).build();

@@ -42,19 +42,29 @@ public class Mail extends Thread {
     private String mensaje;
     private String adjunto;
     private String imagenes;
+    
+    private String tarjeta; //reseteo
+    private String usuario;//reseteo
+    private String pass;//reseteo
+    
+    
     private int tipo;
     
     private Configuracion conf;
     private Logger logger;
     
     
-    public Mail(Stack<String> destinatarios, String asunto, String mensaje, String adjunto, int tipo) {
+    public Mail(Stack<String> destinatarios, String asunto, String mensaje, String adjunto, String tarjeta, String usuario, String pass,
+            int tipo) {
 
         this.destinatarios = destinatarios;
         this.asunto = asunto;
         this.mensaje = mensaje;
         this.adjunto = adjunto;
         this.tipo = tipo;
+        this.tarjeta = tarjeta;
+        this.usuario = usuario;
+        this.pass = pass;
         this.conf = Configuracion.getConfig();
     }
     
@@ -80,11 +90,36 @@ public class Mail extends Thread {
                 case Constantes.MAIL_BIENVENIDA:
                     this.mailBienvenida(mensaje);
                     break;
+                
+                case Constantes.MAIL_PASS_CHANG:
+                    this.mailReseteoPass(mensaje, usuario, pass, tarjeta);
+                    break;
             }
         }
         catch(Exception e){
             e.printStackTrace();
         }
+    }
+    
+    private void mailReseteoPass(Message mensaje, String usuario, String pass, String tarjeta) throws Exception{
+        mensaje.setSubject("FARMACLUB");
+        Multipart multipart = new MimeMultipart("related");
+        String linea = "Estimado Usuario: <br>";
+        linea += "Se nos ha solicitado el reinicio de los datos de inicio para ";
+        linea += "la tarjeta Nº " + tarjeta + ". <br> <br>";
+        linea += "Ingrese nuevamente a la App con los siguientes datos: <br>";
+        linea += "<b>Nombre Usuario:</b> "+usuario +"<br>";
+        linea += "<b>Password:</b> "+pass +"<br> <br><br>";
+        linea += "En el proximo legeo le solicitaremos que genere un nuevo usuario y password.<br>";
+        linea += "Lo saludamos Atte <b>FARMACLUB</b>";
+
+        BodyPart texto = new MimeBodyPart();
+        texto.setContent(linea,"text/html");
+        multipart.addBodyPart(texto);
+        
+        mensaje.setContent(multipart);
+        // Enviar el mensaje
+        Transport.send(mensaje);
     }
     
     private void mailBienvenida(Message mensaje) throws Exception{
@@ -193,57 +228,6 @@ public class Mail extends Thread {
         }
         return props;
     }
-    
-//    public void sendErrorMail() throws Exception {
-//        Transport transport = null;
-//        Properties props = this.getParametros();
-//        Session mailSession = Session.getDefaultInstance(props, new SMTPAuthenticator(this.remitente, this.password, true));
-//        mailSession.setDebug(true);
-//        transport = mailSession.getTransport("smtp");
-//        MimeMessage message = this.prepararMensaje(mailSession);
-//        transport.connect();
-//        Transport.send(message);
-//    }
-//
-//    private MimeMessage prepararMensaje(Session mailSession) {
-//        Configuracion configuracion = Configuracion.getConfig();
-//        MimeMessage mimeMessage = null;
-//        try {
-//            mimeMessage = new MimeMessage(mailSession);
-//            mimeMessage.setFrom(new InternetAddress(remitente));
-//            mimeMessage.setSubject(asunto);
-//            for (int i = 0; i < destinatarios.size(); i++) {
-//                if (destinatarios.elementAt(i) != null) {
-//                    mimeMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(destinatarios.elementAt(i)));
-//                }
-//            }
-//            mimeMessage.addRecipient(Message.RecipientType.CC, new InternetAddress("aalanzoni@gmail.com"));
-//
-//            BodyPart adjunto = new MimeBodyPart();
-//
-//            MimeBodyPart textPart = new MimeBodyPart();
-//            textPart.setText(mensaje, "ISO-8859-1", "html");
-//            
-//            if(this.tipo == Constantes.MAIL_ERROR)
-//                this.adjunto = configuracion.getLog();
-//
-//            if(this.adjunto != null){
-//                adjunto.setDataHandler(new DataHandler(new FileDataSource(this.adjunto)));
-//                if (this.tipo == 1) {
-//                    adjunto.setFileName("server.log");
-//                }
-//            }
-//
-//            MimeMultipart multiParte = new MimeMultipart();
-//            multiParte.addBodyPart(textPart);
-//            multiParte.addBodyPart(adjunto);
-//
-//            mimeMessage.setContent(multiParte);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return mimeMessage;
-//    }
 
     @Override
     public void run() {
@@ -254,25 +238,6 @@ public class Mail extends Thread {
         }
     }
     
-//    public void mailBienvenida(Stack<String> destinatarios) throws Exception{
-//        this.destinatarios = destinatarios;
-//        String asunto = "Bienvenido a FarmaClub";
-//        String mensaje = "De éste modo le damos la bienvenida a nuestro exclusivo Club.<br>";
-//        mensaje += "Ud podrá sumar puntos con sus compras y canjearlos en todos los locales adheridos a <b>FARMACLUB</b>";
-//        mensaje += "<br> <br>";
-//        mensaje += "Lo saludamos atentamente quienes formamos FARMACLUB.";
-//        Thread hilo = new Thread(new Mail(asunto, mensaje, "", Constantes.MAIL_ERROR));
-//        hilo.start();
-//        System.out.println("Sigue el otro hilo");
-//        int i = 0;
-//        while(hilo.isAlive()){
-//            i ++;
-//            System.out.println("Esperando: " + i + " segundos");
-//            sleep(1000);
-//        }
-//        System.out.println("Mail enviado");
-//        System.exit(0);
-//    }
     
     public static void main(String[] args) {
         //destinatarios.add("aalanzoni@gmail.com");
@@ -288,11 +253,10 @@ public class Mail extends Thread {
             //Stack<String> destinatarios, String asunto, String mensaje, String adjunto, int tipo
             Stack<String> destinatarios = new Stack<String>();
             destinatarios.add("aalanzoni@gmail.com");
-            destinatarios.add("jeceiza@outlook.com");
-            destinatarios.add("jeceiza@arnet.com");
-            destinatarios.add("hellsing952@gmail.com");
+            //destinatarios.add("jeceiza@outlook.com");
+            //destinatarios.add("hellsing952@gmail.com");
             
-            Thread hilo = new Thread(new Mail(destinatarios, asunto, mensaje, "", Constantes.MAIL_BIENVENIDA));
+            Thread hilo = new Thread(new Mail(destinatarios, asunto, mensaje, "", "123", "aalanzoni", "1234", Constantes.MAIL_PASS_CHANG));
             hilo.start();
             
             System.out.println("Sigue el otro hilo");

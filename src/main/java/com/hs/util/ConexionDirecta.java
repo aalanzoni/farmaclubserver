@@ -5,6 +5,7 @@
  */
 package com.hs.util;
 
+import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -38,10 +39,11 @@ public class ConexionDirecta {
             connectionUrl += "password=" + conf.getPass();
 
             conf.getLogger().log(Level.INFO, "URL: "+connectionUrl);
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             conexion = DriverManager.getConnection(connectionUrl);
             conf.getLogger().log(Level.INFO, "CONEXION ESTABLECIDA");
         } 
-        catch (SQLException ex){
+        catch (Exception ex){
             conf.getLogger().log(Level.SEVERE,"ERROR EN CONEXIONA A DB",ex);
         }
     }
@@ -66,6 +68,11 @@ public class ConexionDirecta {
      
     public static void main (String a[]){
         try{
+//            byte[] bytesOfMessage = new String("JECEIZA").getBytes("UTF-8");
+//
+//            MessageDigest md = MessageDigest.getInstance("MD5");
+//            byte[] thedigest = md.digest(bytesOfMessage);
+//            System.out.println("JECEIZA: "+thedigest.toString());
             
             ConexionDirecta c = ConexionDirecta.getConexion();
             String SQL = "SELECT codtar_datos9, nom_datos9, descuento_datos9 FROM datos9 (nolock)";
