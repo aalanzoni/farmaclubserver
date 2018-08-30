@@ -96,8 +96,7 @@ public final class ControlUsuario {
                 if(rs.isBeforeFirst()){
                     while (rs.next()) {
                         String correo = rs.getString("correo");
-                        correo = correo.trim();
-                        if(!correo.isEmpty()){
+                        if(correo != null && !correo.trim().isEmpty()){
                             if(Utilidades.validarMail(correo)){
                                 String pass = "";
                                 Random random = new Random();
@@ -161,8 +160,6 @@ public final class ControlUsuario {
             resul.put("msj", "Error en reseteo de pass: " + e.getMessage());
             resul.put("mail", "");
             resul.put("reiniciar", 0);
-            
-            throw e;
         }
         finally{
             if (rs != null) {
@@ -380,7 +377,7 @@ public final class ControlUsuario {
 
         ControlUsuario cu = new ControlUsuario();
         try{
-            cu.resetPass("147444");
+            cu.resetPass("12345678");
         }
         catch(Exception e){
             e.printStackTrace();
