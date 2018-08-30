@@ -297,6 +297,35 @@ public class UserService {
             
             return Response.ok(resp).build();
         }
+
+
+        @POST
+        @Path("/reset_pass")
+        @Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response resetPass(Map<String, String> parametros) throws Exception {
+        
+            JSONObject resp = new JSONObject();
+            
+            if(!parametros.containsKey("tarjeta")){
+                resp.put("salida", 9);
+                resp.put("pass", "");
+                resp.put("msj", "No encuentra parametros de entrada (Tarjeta)");
+                resp.put("mail", "");
+                resp.put("reiniciar", 0);
+                System.out.println("Falta Parametro tarjeta!!!");
+                
+                return Response.ok(resp).build();
+            }else{
+                try{
+                    String tarjeta = parametros.get("tarjeta");
+                    resp = ControlUsuario.resetPass(tarjeta);
+                }
+                catch(Exception e){}//ignore
+            }
+            
+            return Response.ok(resp).build();
+        }
         
         @GET
         @Path("/u")

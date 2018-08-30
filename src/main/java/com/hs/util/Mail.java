@@ -42,9 +42,9 @@ public class Mail extends Thread {
     private String mensaje;
     private String adjunto;
     private String imagenes;
+    private String debug;
     
     private String tarjeta; //reseteo
-    private String usuario;//reseteo
     private String pass;//reseteo
     
     
@@ -54,7 +54,7 @@ public class Mail extends Thread {
     private Logger logger;
     
     
-    public Mail(Stack<String> destinatarios, String asunto, String mensaje, String adjunto, String tarjeta, String usuario, String pass,
+    public Mail(Stack<String> destinatarios, String asunto, String mensaje, String adjunto, String tarjeta, String pass,
             int tipo) {
 
         this.destinatarios = destinatarios;
@@ -63,15 +63,14 @@ public class Mail extends Thread {
         this.adjunto = adjunto;
         this.tipo = tipo;
         this.tarjeta = tarjeta;
-        this.usuario = usuario;
         this.pass = pass;
         this.conf = Configuracion.getConfig();
     }
     
     private void enviarMensaje() throws Exception{
         Properties props = this.getParametros();
-        Session mailSession = Session.getDefaultInstance(props, new SMTPAuthenticator(this.remitente, this.password, true));
-        mailSession.setDebug(true);
+        Session mailSession = Session.getInstance(props, new SMTPAuthenticator(this.remitente, this.password, true));
+        mailSession.setDebug(debug.equals("true"));
         Message mensaje = new MimeMessage(mailSession);
         try{ 
             // Emisor del mensaje
@@ -92,25 +91,24 @@ public class Mail extends Thread {
                     break;
                 
                 case Constantes.MAIL_PASS_CHANG:
-                    this.mailReseteoPass(mensaje, usuario, pass, tarjeta);
+                    this.mailReseteoPass(mensaje, pass, tarjeta);
                     break;
             }
+            
         }
         catch(Exception e){
             e.printStackTrace();
         }
     }
     
-    private void mailReseteoPass(Message mensaje, String usuario, String pass, String tarjeta) throws Exception{
+    private void mailReseteoPass(Message mensaje, String pass, String tarjeta) throws Exception{
         mensaje.setSubject("FARMACLUB");
         Multipart multipart = new MimeMultipart("related");
         String linea = "Estimado Usuario: <br>";
-        linea += "Se nos ha solicitado el reinicio de los datos de inicio para ";
+        linea += "Se nos ha solicitado el reinicio de su clave para ";
         linea += "la tarjeta Nº " + tarjeta + ". <br> <br>";
-        linea += "Ingrese nuevamente a la App con los siguientes datos: <br>";
-        linea += "<b>Nombre Usuario:</b> "+usuario +"<br>";
-        linea += "<b>Password:</b> "+pass +"<br> <br><br>";
-        linea += "En el proximo legeo le solicitaremos que genere un nuevo usuario y password.<br>";
+        linea += "<b>Password:</b> " + pass + "<br> <br><br>";
+        linea += "En el proximo inicio de sesion le solicitaremos que ingrese con su numero de Tarjeta de Socio y password Asignado.<br><br>";
         linea += "Lo saludamos Atte <b>FARMACLUB</b>";
 
         BodyPart texto = new MimeBodyPart();
@@ -202,6 +200,7 @@ public class Mail extends Thread {
             autenticacion = propiedades.get("autenticacion").toString();
             tls = propiedades.get("starttls").toString();
             imagenes = propiedades.get("mail_imagenes").toString();
+            debug = propiedades.get("debug").toString();
 
             if(this.tipo == Constantes.MAIL_ERROR){
                 String casillas = propiedades.get("error_mail").toString();
@@ -256,7 +255,7 @@ public class Mail extends Thread {
             //destinatarios.add("jeceiza@outlook.com");
             //destinatarios.add("hellsing952@gmail.com");
             
-            Thread hilo = new Thread(new Mail(destinatarios, asunto, mensaje, "", "123", "aalanzoni", "1234", Constantes.MAIL_PASS_CHANG));
+            Thread hilo = new Thread(new Mail(destinatarios, asunto, mensaje, "", "123", "1234", Constantes.MAIL_PASS_CHANG));
             hilo.start();
             
             System.out.println("Sigue el otro hilo");

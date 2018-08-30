@@ -25,6 +25,7 @@ public class Configuracion {
     private static String log = "";
     private static String urlCotiza = "";    
     private static String driver = "";
+    private static String driver_class = "";
     private static String server = "";
     private static String puerto = "";
     private static String instancia = "";
@@ -71,6 +72,7 @@ public class Configuracion {
             log = propiedades.get("log").toString();
             urlCotiza = propiedades.get("urlCotiza").toString();            
             driver = propiedades.get("driver").toString();
+            driver_class = propiedades.get("driver_class").toString();
             server = propiedades.get("servidor").toString();
             puerto = propiedades.get("puerto").toString();
             instancia = propiedades.get("instancia").toString();
@@ -157,6 +159,10 @@ public class Configuracion {
 
     public static String getDriver() {
         return driver;
+    }
+
+    public static String getDriver_class() {
+        return driver_class;
     }
 
     public Logger getLogger() {

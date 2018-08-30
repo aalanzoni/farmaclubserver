@@ -39,7 +39,8 @@ public class ConexionDirecta {
             connectionUrl += "password=" + conf.getPass();
 
             conf.getLogger().log(Level.INFO, "URL: "+connectionUrl);
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            Class.forName(conf.getDriver_class());
+//            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             conexion = DriverManager.getConnection(connectionUrl);
             conf.getLogger().log(Level.INFO, "CONEXION ESTABLECIDA");
         } 
