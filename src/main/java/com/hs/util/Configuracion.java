@@ -36,6 +36,9 @@ public class Configuracion {
     private static String salida_mail = "";
     private static String error_mail = "";
     private static String envia_error_mail = "";
+    private static String letra_p = "";
+    private static String letra_x = "";
+    
     
     private Logger logger;
     
@@ -83,6 +86,8 @@ public class Configuracion {
             salida_mail = propiedades.get("salida_mail").toString();
             error_mail = propiedades.get("error_mail").toString();
             envia_error_mail = propiedades.get("envia_error_mail").toString();
+            letra_p = propiedades.get("P").toString();
+            letra_x = propiedades.get("X").toString();
             
             try {
                 FileHandler fileHandler = new FileHandler(Configuracion.getLog(), true);
@@ -187,6 +192,14 @@ public class Configuracion {
 
     public static String getLicencia() {
         return licencia;
+    }
+
+    public static String getLetra_p() {
+        return letra_p;
+    }
+
+    public static String getLetra_x() {
+        return letra_x;
     }
 }
 

@@ -90,13 +90,14 @@ public final class ControlUsuario {
             if(con != null){
                 String sql = "select mail_datos9 as correo from datos9 (nolock) where codtar_datos9 = '"+
                         tarjeta +
-                        "' and estado_datos9 = 1";
+                        "' and estado_datos9 = 0";
                 stmt = con.getConnection().createStatement();
                 rs = stmt.executeQuery(sql);
                 if(rs.isBeforeFirst()){
                     while (rs.next()) {
                         String correo = rs.getString("correo");
-                        if(correo != null && !correo.trim().isEmpty()){
+                        if(correo != null && !correo.isEmpty()){
+                            correo = correo.trim();
                             if(Utilidades.validarMail(correo)){
                                 String pass = "";
                                 Random random = new Random();
@@ -109,7 +110,7 @@ public final class ControlUsuario {
                                         pass +
                                         "' where codtar_datos9 = '" +
                                         tarjeta +
-                                        "' and estado_datos9 = 1";
+                                        "' and estado_datos9 = 0";
 
                                 stmt.executeUpdate(sql);
                                 
@@ -189,7 +190,7 @@ public final class ControlUsuario {
             ConexionDirecta con = ConexionDirecta.getConexion();
             if(con != null){
                 String sql = "SELECT sum(puntos_hiscre) as puntos FROM HISCRE (nolock) where codtar_hiscre = '" + tarjeta +"'";
-                //estado_hiscre = ' ' or estado_hiscre is null
+                sql += " and (estado_hiscre = ' ' or estado_hiscre is null)";
                 stmt = con.getConnection().createStatement();
                 rs = stmt.executeQuery(sql);
 
@@ -223,10 +224,8 @@ public final class ControlUsuario {
             String tarjeta = parametros.get("tarjeta").toString();
             String user = parametros.get("usuario").toString();
             String pass = parametros.get("pass").toString();
-            System.out.println(tarjeta + user + pass);
 
             if(ControlUsuario.existeUsuario(user, null)){
-                System.out.println("Existe");
                 resultado.put("salida", 9);
                 resultado.put("actualizaciones", 0);
                 resultado.put("msj", "Ya existe el usuario ingresado");
@@ -240,8 +239,6 @@ public final class ControlUsuario {
             String sql = "update datos9 set usuario_datos9 = '" + user +"', ";
             sql += "password_datos9 = '" + pass +"' ";
             sql += "where codtar_datos9 = '" + tarjeta +"'";
-
-            System.out.println("SQL: "+sql);
 
             stmt.executeUpdate(sql);
 

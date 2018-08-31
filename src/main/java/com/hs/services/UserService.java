@@ -27,7 +27,7 @@ import org.json.simple.JSONObject;
  * UserService represent a Jersey resources that will be 
  * manipulated by different HTTP methods.
  * 
- * @author Dmitry Nikolaenko
+ * @author Andres Lanzoni
  *
  */
 //http://localhost:8080/restfull-web-services-app-master/rest
@@ -130,7 +130,8 @@ public class UserService {
                         String tarjeta = resp.get("tarjeta").toString();
 
                         int puntos = 0;
-                        if(tarjeta.length() > 1)
+                        int aux = Integer.parseInt(resp.get("salida").toString());
+                        if(aux == 1)//Usuario validado
                             puntos = ControlUsuario.getPuntos(tarjeta);
 
                         resp.put("puntos", puntos);
@@ -178,7 +179,8 @@ public class UserService {
                 try{
                     resp = ControlUsuario.validaUsuario(tarjeta, pass, true);
                     int puntos = 0;
-                    if(tarjeta.length() > 1)
+                    int aux = Integer.parseInt(resp.get("salida").toString());
+                    if(aux == 1)//Usuario validado
                         puntos = ControlUsuario.getPuntos(tarjeta);
                     
                     resp.put("puntos", puntos);
@@ -213,9 +215,9 @@ public class UserService {
                 }
             }
             response = Response.ok((Object) null);
-            response.status(99);
             return response.build();
         }
+        
         //http://localhost:8080/restfull-web-services-app-master/rest/user/existeusu
         @POST
         @Path("/existeusu")

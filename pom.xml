@@ -62,7 +62,14 @@
         <groupId>javax.mail</groupId>
         <artifactId>mail</artifactId>
         <version>1.5.0-b01</version>
-    </dependency>  
+    </dependency> 
+
+    <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>1.10</version>
+    </dependency>
+     
   </dependencies>
   
   <build>

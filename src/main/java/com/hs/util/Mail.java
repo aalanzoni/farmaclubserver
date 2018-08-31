@@ -195,6 +195,12 @@ public class Mail extends Thread {
 
             remitente = propiedades.get("remitente").toString();
             password = propiedades.get("password").toString();
+            try{
+                password = Crypto.Desencriptar(password);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
             servidorSMTP = propiedades.get("servidorSMTP").toString();
             puertoSalida = propiedades.get("puertoSalida").toString();
             autenticacion = propiedades.get("autenticacion").toString();
