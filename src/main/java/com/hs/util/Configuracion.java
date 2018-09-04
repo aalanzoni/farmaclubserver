@@ -47,10 +47,6 @@ public class Configuracion {
     public static Configuracion getConfig(){
         if(config == null){
             config = new Configuracion();
-            System.out.println("nueva configuracion");
-        }
-        else{
-            System.out.println("configuracion activa");
         }
         return config;
     }

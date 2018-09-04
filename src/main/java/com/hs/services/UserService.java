@@ -4,7 +4,6 @@ import com.hs.control.ControlUsuario;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
