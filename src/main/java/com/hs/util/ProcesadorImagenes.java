@@ -12,7 +12,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 /**
@@ -72,6 +71,38 @@ public class ProcesadorImagenes {
         // Capturo ancho y alto de la imagen
         int anchoImagen = imagen.getHeight();
         int altoImagen = imagen.getWidth();
+
+        // Calculo la relacion entre anchos y altos de la imagen
+        double escalaX = (double) maximoAncho / (double) anchoImagen;
+        double escalaY = (double) maximoAlto / (double) altoImagen;
+
+        // Tomo como referencia el minimo de las escalas
+        double fEscala = Math.min(escalaX, escalaY);
+
+        // Devuelvo el resultado de aplicar esa escala a la imagen
+        return escalar(fEscala, imagen);
+    }
+    
+    public BufferedImage normalizar(final BufferedImage imagen ) {
+        int maximoAncho = 0;
+        int maximoAlto = 0;
+        
+        // Comprobacion de parametros
+        if (imagen == null) {
+            return null;
+        }
+
+        // Capturo ancho y alto de la imagen
+        int anchoImagen = imagen.getHeight();
+        int altoImagen = imagen.getWidth();
+        
+        if(anchoImagen > altoImagen){
+            maximoAlto = altoImagen;
+            maximoAncho = altoImagen;
+        }else{
+            maximoAlto = anchoImagen;
+            maximoAncho = anchoImagen;
+        }
 
         // Calculo la relacion entre anchos y altos de la imagen
         double escalaX = (double) maximoAncho / (double) anchoImagen;
@@ -156,31 +187,29 @@ public class ProcesadorImagenes {
         BufferedImage imagen;
 
         try {
-            String name = "viagra";
+            String name = "pantera";
             String extension = ".jpg";
-            imagen = ImageIO.read(new File("D:/" + name + extension));
+            imagen = ImageIO.read(new File("C:/imagenes/" + name + extension));
             ProcesadorImagenes pi = new ProcesadorImagenes();
 
             // Escalo algunas imagenes como pruebas
 //            BufferedImage imagen800_600 = pi.escalarATamanyo(imagen, 800, 600);
+            BufferedImage imagenSnap_normal = pi.normalizar(imagen);
             BufferedImage imagenSnap_Shot = pi.escalarATamanyo(imagen, 50, 50);
             BufferedImage imagenMediana = pi.escalarATamanyo(imagen, 100, 100);
 
             // Las salvo en disco
-            
-            //pi.salvarImagen(imagen800_600,"D:\\imagenG.jpg","jpg");
+            pi.salvarImagen(imagenSnap_normal, "D:/" + name + "_normalizada.jpg", "jpg");
             pi.salvarImagen(imagenMediana, "D:/" + name + "_gde.jpg", "jpg");
-            //pi.salvarImagen(imagenSnap_Shot,"D:\\imagenP.jpg","jpg");
             pi.salvarImagen(imagenSnap_Shot, "D:/" + name + "_peq.jpg", "jpg");
-            //pi.salvarImagen(imagenMediana,"D:\\imagenA.gif","jpg");
             
             // Extraigo la lista de formatos capaces de leer
             String[] formatos = pi.dameFormatosUsables();
 
             // los voy mostrando
-            for (int i = 0; i < formatos.length; i++) {
-                System.out.println(formatos[i].toString());
-            }
+//            for (int i = 0; i < formatos.length; i++) {
+//                System.out.println(formatos[i].toString());
+//            }
 
             // Final del metodo con exito
             System.exit(0);

@@ -113,11 +113,11 @@ public final class ControlUsuario {
                                         "' and estado_datos9 = 0";
 
                                 stmt.executeUpdate(sql);
-                                
+
 //                              Enviamos el Mail
                                 Stack<String> destinatarios = new Stack<String>();
                                 destinatarios.add(correo);
-                                
+
                                 Thread hilo = new Thread(new Mail(destinatarios, null, null, null, tarjeta, pass, Constantes.MAIL_PASS_CHANG));
                                 hilo.start();
 
@@ -320,7 +320,7 @@ public final class ControlUsuario {
             //ConexionDirecta cd = new ConexionDirecta();
             ConexionDirecta c = ConexionDirecta.getConexion();
             if(c != null){
-                String SQL = "SELECT 1 as valido, codtar_datos9, nom_datos9, descuento_datos9 FROM datos9 (nolock) where ";
+                String SQL = "SELECT 1 as valido, codtar_datos9, nom_datos9, descuento_datos9, mail_datos9 FROM datos9 (nolock) where ";
 
                 if (primera)  //Primer loggin valida contra la tarjeta de puntos.
                     SQL += "codtar_datos9 = '" + nombre + "'";
@@ -341,12 +341,14 @@ public final class ControlUsuario {
                             resul.put("salida", 1);
                             resul.put("tarjeta", rs.getString("codtar_datos9"));
                             resul.put("nombre", rs.getString("nom_datos9"));
+                            resul.put("correo", rs.getString("mail_datos9"));
                             resul.put("msj", "OK");
                         }else{
                             resul.put("salida", 9);
                             resul.put("tarjeta", 0);
                             resul.put("nombre", "");
                             resul.put("puntos", 0);
+                            resul.put("correo", "");
                             resul.put("msj", "Usuario No localizado");
                         }
 
@@ -357,6 +359,7 @@ public final class ControlUsuario {
                     resul.put("tarjeta", 0);
                     resul.put("nombre", "");
                     resul.put("puntos", 0);
+                    resul.put("correo", "");
                     resul.put("msj", "Usuario No localizado");
                 }
                 stmt.close();
