@@ -44,6 +44,7 @@ public class ConexionDirecta {
         } 
         catch (Exception ex){
             conf.getLogger().log(Level.SEVERE,"ERROR EN CONEXIONA A DB",ex);
+            Utilidades.sendErrorMail(ex.getMessage());
         }
     }
     

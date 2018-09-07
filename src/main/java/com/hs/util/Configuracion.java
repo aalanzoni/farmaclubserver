@@ -85,21 +85,16 @@ public class Configuracion {
             letra_p = propiedades.get("P").toString();
             letra_x = propiedades.get("X").toString();
             
-            try {
-                FileHandler fileHandler = new FileHandler(Configuracion.getLog(), true);
-                fileHandler.setFormatter(new SimpleFormatter());
-                this.logger.addHandler(fileHandler);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-                this.logger.log(Level.SEVERE, "Error creando manejador de log", e);
-            }
-            this.logger.log(Level.INFO, "Preferencias Cargadas");
+            FileHandler fileHandler = new FileHandler(Configuracion.getLog(), true);
+            fileHandler.setFormatter(new SimpleFormatter());
+            this.logger.addHandler(fileHandler);
         }
         catch(Exception ioe){
             ioe.printStackTrace();
             this.logger.log(Level.SEVERE, "Error cargando preferencias", ioe);
+            Utilidades.sendErrorMail(ioe.getMessage());
         }
+        this.logger.log(Level.INFO, "Preferencias Cargadas");
     }
     
     public static void main(String a[]){

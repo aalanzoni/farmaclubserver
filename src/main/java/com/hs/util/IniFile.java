@@ -31,6 +31,7 @@ public class IniFile {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+            Utilidades.sendErrorMail(ex.getMessage());
         }
     }
 

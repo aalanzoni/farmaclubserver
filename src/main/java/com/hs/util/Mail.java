@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
+import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.Multipart;
@@ -75,9 +76,9 @@ public class Mail extends Thread {
         try{ 
             // Emisor del mensaje
             mensaje.setFrom(new InternetAddress(this.remitente));
-            
-            for (int i = 0; i < destinatarios.size(); i++) {
-                String cte = destinatarios.elementAt(i);
+           
+            for (int i = 0; i < this.destinatarios.size(); i++) {
+                String cte = this.destinatarios.elementAt(i);
                 mensaje.addRecipient(Message.RecipientType.TO, new InternetAddress(cte));
             }
             
@@ -153,8 +154,46 @@ public class Mail extends Thread {
         }
         
         mensaje.setContent(multipart);
-        // Enviar el mensaje
-        Transport.send(mensaje);
+        try{
+            // Enviar el mensaje
+            Transport.send(mensaje);
+        }
+        catch(javax.mail.SendFailedException  mx){
+            StringBuilder errorSB = null;
+ 
+            if(mx.getInvalidAddresses() != null) {
+                errorSB = new StringBuilder();
+                for(Address email: mx.getInvalidAddresses()) {
+                    errorSB.append(email.toString());
+                    errorSB.append(", ");
+                }
+                conf.getLogger().log(Level.WARNING, "Invalid Address Found: "+ errorSB);
+            }
+
+            if(mx.getValidSentAddresses() != null) {
+                errorSB = new StringBuilder();
+                for(Address email: mx.getValidSentAddresses()) {
+                    errorSB.append(email.toString());
+                    errorSB.append(", ");
+                }
+                conf.getLogger().log(Level.WARNING, "Email sent to valid address: "+ errorSB);
+            }
+
+            if(mx.getValidUnsentAddresses() != null) {
+                errorSB = new StringBuilder();
+                for(Address email: mx.getValidUnsentAddresses()) {
+                    errorSB.append(email.toString());
+                    errorSB.append(", ");
+                }
+                conf.getLogger().log(Level.WARNING, "Email not sent to valid address: "+ errorSB);
+            }
+        }
+        catch(javax.mail.MessagingException mx) { 
+            conf.getLogger().log(Level.WARNING, "Email not sent: "+ mx.getMessage());
+        } 
+        catch (Exception ex) { 
+            conf.getLogger().log(Level.WARNING, "Email not sent: "+ ex.getMessage());
+        }
     }
     
     private void mailError(Message mensaje) throws Exception{
@@ -165,7 +204,7 @@ public class Mail extends Thread {
 
         // Rellenar el MimeBodyPart con el fichero e indicar que es un fichero HTML
         BodyPart texto = new MimeBodyPart();
-        texto.setContent("Verificar LOG adjunto","text/html");
+        texto.setContent(this.mensaje + "<br><br>" + "Verificar LOG adjunto","text/html");
         multipart.addBodyPart(texto);
 
         this.adjunto = this.conf.getLog();
@@ -209,16 +248,19 @@ public class Mail extends Thread {
             debug = propiedades.get("debug").toString();
 
             if(this.tipo == Constantes.MAIL_ERROR){
+                this.destinatarios = new Stack<String>();
                 String casillas = propiedades.get("error_mail").toString();
+                System.out.println("Casillas: "+casillas);
                 List<String> cuentas = Arrays.asList(casillas.split("\\s*;\\s*"));
                 for (Iterator<String> iterator = cuentas.iterator(); iterator.hasNext();) {
                     String next = iterator.next();
-                    destinatarios.add(next);
+                    this.destinatarios.add(next);                    
                 }
+                System.out.println("Destinatarios: "+destinatarios.toString());
             }
             
-            if(tipo == Constantes.MAIL_BIENVENIDA){
-                mensaje = propiedades.get("msj_bienvenida").toString();
+            if(this.tipo == Constantes.MAIL_BIENVENIDA){
+                this.mensaje = propiedades.get("msj_bienvenida").toString();
             }
             props.put("mail.smtp.host", this.servidorSMTP);        // El servidor SMTP de Google    
             props.put("mail.smtp.user", this.remitente);           // Nombre del usuario
@@ -257,11 +299,11 @@ public class Mail extends Thread {
             //JOptionPane.showMessageDialog(null, "Antes de llamarlo", "INFO", JOptionPane.INFORMATION_MESSAGE);
             //Stack<String> destinatarios, String asunto, String mensaje, String adjunto, int tipo
             Stack<String> destinatarios = new Stack<String>();
-            destinatarios.add("aalanzoni@gmail.com");
+//            destinatarios.add("aalanzoni@gmail.com");
             //destinatarios.add("jeceiza@outlook.com");
             //destinatarios.add("hellsing952@gmail.com");
             
-            Thread hilo = new Thread(new Mail(destinatarios, asunto, mensaje, "", "123", "1234", Constantes.MAIL_PASS_CHANG));
+            Thread hilo = new Thread(new Mail(destinatarios, asunto, mensaje, "", "123", "1234", Constantes.MAIL_ERROR));
             hilo.start();
             
             System.out.println("Sigue el otro hilo");

@@ -31,8 +31,17 @@ public class Utilidades {
         return resultado;
     }
     
+    public static void sendErrorMail(String msj){
+        Configuracion conf = Configuracion.getConfig();
+        if(conf.getEnvia_error_mail().compareTo("1") == 0){
+            Thread hilo = new Thread(new Mail(null, null, msj, null, null, null, Constantes.MAIL_ERROR));
+            hilo.start();
+        }
+    }
+    
     public static void main(String a[]){
-        System.out.println("Salida: "+Utilidades.validarMail("aalanzoni@gmail."));
+//        System.out.println("Salida: "+Utilidades.validarMail("aalanzoni@gmail."));
+        Utilidades.sendErrorMail("Ésto es una prueba de lo que puede ser");
     }
 
 

@@ -192,7 +192,7 @@ public class UserService {
                     String correo = resp.get("correo").toString();
                     if(correo != null && !correo.trim().isEmpty()){
                         Configuracion config = Configuracion.getConfig();
-                        config.getLogger().log(Level.INFO, "Mail de Bienvenida a Tarjeta: " + tarjeta +" Correo: "+correo);
+                        config.getLogger().log(Level.INFO, "Mail de Bienvenida a Tarjeta: " + tarjeta +" Correo: " + correo);
 
                         Stack<String> destinatarios = new Stack<String>();
                         destinatarios.add(correo);

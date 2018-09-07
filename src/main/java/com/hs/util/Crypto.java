@@ -38,6 +38,8 @@ public class Crypto {
             base64EncryptedString = new String(base64Bytes);
 
         } catch (Exception ex) {
+            ex.printStackTrace();
+            Utilidades.sendErrorMail(ex.getMessage());
         }
         return base64EncryptedString;
     }
@@ -62,6 +64,8 @@ public class Crypto {
             base64EncryptedString = new String(plainText, "UTF-8");
 
         } catch (Exception ex) {
+            ex.printStackTrace();
+            Utilidades.sendErrorMail(ex.getMessage());
         }
         return base64EncryptedString;
     }

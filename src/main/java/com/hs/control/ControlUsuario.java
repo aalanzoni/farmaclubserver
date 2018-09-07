@@ -156,6 +156,7 @@ public final class ControlUsuario {
         }
         catch(Exception e){
             e.printStackTrace();
+            Utilidades.sendErrorMail(e.getMessage());
             resul.put("salida", 9);
             resul.put("pass", "");
             resul.put("msj", "Error en reseteo de pass: " + e.getMessage());
@@ -201,6 +202,7 @@ public final class ControlUsuario {
             }
         }
         catch(Exception e){
+            Utilidades.sendErrorMail(e.getMessage());
             throw e;
         }
         finally{
@@ -248,6 +250,7 @@ public final class ControlUsuario {
         }
         catch(SQLException ex){
             // handle any errors
+            Utilidades.sendErrorMail(ex.getMessage()+" " + ex.getSQLState() + " " + ex.getErrorCode());
             System.out.println("SQLException: " + ex.getMessage());
             System.out.println("SQLState: " + ex.getSQLState());
             System.out.println("VendorError: " + ex.getErrorCode());
@@ -298,8 +301,11 @@ public final class ControlUsuario {
             else
                 res = false;
         }
-        catch(Exception e){
+        catch(Exception e){            
+            e.printStackTrace();
+            Utilidades.sendErrorMail(e.getMessage());
             throw e;
+            
         }
         finally{
             if(stmt != null){
@@ -367,6 +373,7 @@ public final class ControlUsuario {
         }
         catch(Exception e){
             e.printStackTrace();
+            Utilidades.sendErrorMail(e.getMessage());
         }
         finally{
             return resul;
