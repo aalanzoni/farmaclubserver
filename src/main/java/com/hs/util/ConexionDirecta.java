@@ -8,6 +8,7 @@ package com.hs.util;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 
@@ -38,25 +39,31 @@ public class ConexionDirecta {
 
             conf.getLogger().log(Level.INFO, "URL: "+connectionUrl);
             Class.forName(conf.getDriver_class());
-//            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             conexion = DriverManager.getConnection(connectionUrl);
             conf.getLogger().log(Level.INFO, "CONEXION ESTABLECIDA");
         } 
         catch (Exception ex){
             conf.getLogger().log(Level.SEVERE,"ERROR EN CONEXIONA A DB",ex);
-            Utilidades.sendErrorMail(ex.getMessage());
+            Utilidades.sendErrorMail("No es posible Conectar a la Base de Datos " + ex.getMessage());
         }
     }
     
     
     
     public static ConexionDirecta getConexion() {
- 
+        Configuracion conf = Configuracion.getConfig();
         if (condir == null) { 
             condir = new ConexionDirecta();
-            System.out.println("nueva");
+            conf.getLogger().log(Level.INFO,"Crea nueva Conexion");
         }else{
-            System.out.println("activa");
+            conf.getLogger().log(Level.INFO,"Conexion Activa");
+        }
+        try{ //Test de conexión
+            String name = condir.getConnection().getMetaData().getDatabaseProductName();
+            conf.getLogger().log(Level.INFO,"Conexion Viva " + name);
+        }
+        catch(SQLException e){
+            condir = new ConexionDirecta();
         }
         return condir;
     }
@@ -82,6 +89,7 @@ public class ConexionDirecta {
                 System.out.println(rs.getString("codtar_datos9") + " " + rs.getString("nom_datos9") + " "+ rs.getBigDecimal("descuento_datos9"));
             }
             stmt.close();
+            
             c = ConexionDirecta.getConexion();
         }
         catch(Exception e){

@@ -191,7 +191,7 @@ public class Mail extends Thread {
         catch(javax.mail.MessagingException mx) { 
             conf.getLogger().log(Level.WARNING, "Email not sent: "+ mx.getMessage());
         } 
-        catch (Exception ex) { 
+        catch (Exception ex) {
             conf.getLogger().log(Level.WARNING, "Email not sent: "+ ex.getMessage());
         }
     }
@@ -250,13 +250,11 @@ public class Mail extends Thread {
             if(this.tipo == Constantes.MAIL_ERROR){
                 this.destinatarios = new Stack<String>();
                 String casillas = propiedades.get("error_mail").toString();
-                System.out.println("Casillas: "+casillas);
                 List<String> cuentas = Arrays.asList(casillas.split("\\s*;\\s*"));
                 for (Iterator<String> iterator = cuentas.iterator(); iterator.hasNext();) {
                     String next = iterator.next();
                     this.destinatarios.add(next);                    
                 }
-                System.out.println("Destinatarios: "+destinatarios.toString());
             }
             
             if(this.tipo == Constantes.MAIL_BIENVENIDA){

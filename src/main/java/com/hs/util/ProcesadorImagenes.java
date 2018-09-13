@@ -187,7 +187,7 @@ public class ProcesadorImagenes {
         BufferedImage imagen;
 
         try {
-            String name = "pantera";
+            String name = "tensiometro";
             String extension = ".jpg";
             imagen = ImageIO.read(new File("C:/imagenes/" + name + extension));
             ProcesadorImagenes pi = new ProcesadorImagenes();
@@ -196,7 +196,7 @@ public class ProcesadorImagenes {
 //            BufferedImage imagen800_600 = pi.escalarATamanyo(imagen, 800, 600);
             BufferedImage imagenSnap_normal = pi.normalizar(imagen);
             BufferedImage imagenSnap_Shot = pi.escalarATamanyo(imagen, 50, 50);
-            BufferedImage imagenMediana = pi.escalarATamanyo(imagen, 100, 100);
+            BufferedImage imagenMediana = pi.escalarATamanyo(imagen, 150, 150);
 
             // Las salvo en disco
             pi.salvarImagen(imagenSnap_normal, "D:/" + name + "_normalizada.jpg", "jpg");

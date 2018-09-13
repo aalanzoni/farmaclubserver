@@ -107,8 +107,9 @@ public final class ControlUsuario {
                                     pass += iterator.next().toString();
                                 }
                                 sql = "update DATOS9 set password_datos9 = '" +
-                                        pass +
-                                        "' where codtar_datos9 = '" +
+                                        pass + "', " +
+                                        "usuario_datos9 = ''" +
+                                        " where codtar_datos9 = '" +
                                         tarjeta +
                                         "' and estado_datos9 = 0";
 

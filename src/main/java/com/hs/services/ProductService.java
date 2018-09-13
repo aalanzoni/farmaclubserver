@@ -7,16 +7,13 @@ package com.hs.services;
 
 import com.hs.control.ControlProducto;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.Map;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import org.json.simple.JSONObject;
 
 /**
@@ -26,6 +23,35 @@ import org.json.simple.JSONObject;
 @Path("/product")
 public class ProductService {
 
+    @POST
+    @Path("/getFoto")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    //public Response validaUsuario(Map<String, String> parametros) throws URISyntaxException {
+    public Response getFoto(Map<String, String> parametros) throws URISyntaxException{
+        JSONObject resp = new JSONObject();
+
+        String codigo = parametros.get("codigo");
+
+        if(codigo == null || codigo.isEmpty()){
+            resp.put("salida", 9);
+            resp.put("msj", "No encuentra parametros de entrada (codigo)");
+            return Response.ok(resp).build();
+        }
+       
+        try{
+            ControlProducto cp = new ControlProducto();
+            resp = cp.getProductoCodigo(codigo);
+            return Response.ok(resp).build();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            resp.put("salida", 9);
+            resp.put("msj", "Error");
+            return Response.ok(resp).build();
+        }
+    }    
+    
     @POST
     @Path("/getCanjes")
     @Produces(MediaType.APPLICATION_JSON)

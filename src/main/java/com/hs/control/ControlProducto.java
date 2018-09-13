@@ -7,7 +7,9 @@ package com.hs.control;
 
 import com.hs.util.ConexionDirecta;
 import com.hs.util.Configuracion;
+import static com.hs.util.Test.resizeImage;
 import com.hs.util.Utilidades;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -36,6 +38,87 @@ public class ControlProducto {
         super();
     }
 
+    public JSONObject getProductoCodigo(String code) throws Exception{
+        Configuracion conf = Configuracion.getConfig();
+        Statement stmt = null;
+        ResultSet rs = null;
+        JSONObject resul = new JSONObject();
+        try{
+            ConexionDirecta con = ConexionDirecta.getConexion();
+            String sql;
+            if(con != null){
+                sql = "SELECT "
+                +    "empre_tarart, "
+                +    "codigo_tarart, "
+                +    "descri_tarart, "
+                +    "puntos_tarart, "
+                +    "fec_vto_tarart, "
+                +    "foto_tarart "
+                +    "FROM "
+                +    "TARART(nolock) "
+                +    "WHERE codigo_tarart = '" + code +"'";
+
+                System.out.println("SQL: " + sql);
+                stmt = con.getConnection().createStatement();
+                rs = stmt.executeQuery(sql);
+                if(rs.isBeforeFirst()){
+
+                    while (rs.next()) {                        
+                        String codigo = rs.getString("codigo_tarart");
+                        String nombre = rs.getString("descri_tarart");
+                        int puntos = rs.getInt("puntos_tarart");
+
+                        resul.put("codigo", codigo);
+                        resul.put("nombre", nombre);
+                        resul.put("puntos", puntos);
+                        resul.put("salida", 1);
+
+                        String foto = rs.getString("foto_tarart");
+                        if(foto != null && !foto.trim().isEmpty()){
+                            foto = foto.trim();
+                            String base64 = this.codificarFoto(foto);
+                            if(base64.compareTo("-1") != 0){
+                                resul.put("foto", base64);
+                            }
+                            else{
+                                conf.getLogger().log(Level.SEVERE, "Foto en BASE64: " + foto + " " + codigo + " " + nombre);
+                            }
+                        }else{
+                            resul.put("foto", "");
+                            resul.put("salida", 9);
+                            resul.put("msj", "Foto no localizada");
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            Utilidades.sendErrorMail(e.getMessage());
+            resul.put("salida", 9);
+            resul.put("msj", e.getMessage());
+        }
+        finally{
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) { } // ignore
+
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) { } // ignore
+
+                stmt = null;
+            }
+        }
+        return resul;
+    }
+    
     public JSONObject getProductosPuntos(String tarjeta, int desde, int hasta, String orden) throws Exception{
         Configuracion conf = Configuracion.getConfig();
         Statement stmt = null;
@@ -95,7 +178,8 @@ public class ControlProducto {
                         +    "m.descri_tarart, "
                         +    "m.puntos_tarart, "
                         +    "m.fec_vto_tarart, "
-                        +    "m.foto_tarart "
+                        +    "m.foto_tarart, "
+                        +    "m.foto_2_tarart "
                         +    "FROM "
                         +    "(SELECT ROW_NUMBER() "
                         +    "OVER (order by " + orden + " ) as RowNr,"
@@ -104,7 +188,8 @@ public class ControlProducto {
                         +    "descri_tarart, "
                         +    "puntos_tarart, "
                         +    "fec_vto_tarart, "
-                        +    "foto_tarart "
+                        +    "foto_tarart, "
+                        +    "foto_2_tarart "
                         +    "FROM TARART(nolock) "
                         +    "WHERE (estado_tarart = '0' or "
                         +           "estado_tarart is null) and "
@@ -127,16 +212,21 @@ public class ControlProducto {
                         cte.put("codigo", codigo);
                         cte.put("nombre", nombre);
                         cte.put("puntos", puntos);
-
-                        String foto = rs.getString("foto_tarart");
-                        if(foto != null && !foto.trim().isEmpty()){
-                            foto = foto.trim();
-                            String base64 = this.codificarFoto(foto);
+                        String foto_ori = rs.getString("foto_tarart");
+                        String foto_chica = rs.getString("foto_2_tarart");
+                        if(foto_chica == null || foto_chica.trim().isEmpty()){
+                            foto_chica = this.redimensionarImgen(foto_ori);
+                            guardoFoto(codigo, foto_chica);
+                        }
+                        
+                        if(foto_chica != null && !foto_chica.trim().isEmpty()){
+                            foto_chica = foto_chica.trim();
+                            String base64 = this.codificarFoto(foto_chica);
                             if(base64.compareTo("-1") != 0){
                                 cte.put("foto", base64);
                             }
                             else{
-                                conf.getLogger().log(Level.SEVERE, "Foto 2 en BASE64: " + foto + " " + codigo + " " + nombre);
+                                conf.getLogger().log(Level.SEVERE, "Foto en BASE64: " + foto_chica + " " + codigo + " " + nombre);
                             }
                         }else
                             cte.put("foto", "");
@@ -175,6 +265,52 @@ public class ControlProducto {
         }
         return resul;
     }
+    
+    private String redimensionarImgen(String foto_ori){
+        Configuracion conf = Configuracion.getConfig();
+        String foto = "";
+        
+        if(foto_ori == null || foto_ori.trim().isEmpty())
+            return null;        
+        System.out.println("Foto a Redimensionar: " + foto_ori);
+        Image img = null;
+        BufferedImage tempPNG = null;
+        File newFilePNG = null;
+        try{
+            img = ImageIO.read(new File(foto_ori));
+            double aspectRatio = (double) img.getWidth(null)/(double) img.getHeight(null);
+            tempPNG = resizeImage(img, 100, (int) (100/aspectRatio));
+            foto = foto_ori.trim() + "_New.png";
+            newFilePNG = new File(foto);
+            ImageIO.write(tempPNG, "png", newFilePNG);
+        }
+        catch(IOException e){
+            conf.getLogger().log(Level.SEVERE, "Error al redimensionar FOTO: " + foto_ori + " " + e.getMessage());
+            return null;
+        }
+
+        return foto;
+    }
+    
+    private void guardoFoto(String code, String name) throws Exception{
+        Statement stmt = null;
+        ConexionDirecta con = ConexionDirecta.getConexion();
+        if(con != null){
+            stmt = con.getConnection().createStatement();
+            String sql = "update tarart set foto_2_tarart = '"+name+"' where codigo_tarart = '"+code+"'";
+            System.out.println("SQL --->>> "+sql);
+            stmt.executeUpdate(sql);
+        }
+
+        if (stmt != null) {
+            try {
+                stmt.close();
+            } catch (SQLException sqlEx) { }
+
+            stmt = null;
+        }
+    }
+    
     public JSONObject getProductosEnCanje(int desde, int hasta, String orden) throws Exception{
         Configuracion conf = Configuracion.getConfig();
         Statement stmt = null;
@@ -203,7 +339,8 @@ public class ControlProducto {
                         +    "m.descri_tarart, "
                         +    "m.puntos_tarart, "
                         +    "m.fec_vto_tarart, "
-                        +    "m.foto_tarart "
+                        +    "m.foto_tarart, "
+                        +    "m.foto_2_tarart "
                         +    "FROM "
                         +    "(SELECT ROW_NUMBER() "
                         +    "OVER (order by " + orden + " ) as RowNr,"
@@ -212,7 +349,8 @@ public class ControlProducto {
                         +    "descri_tarart, "
                         +    "puntos_tarart, "
                         +    "fec_vto_tarart, "
-                        +    "foto_tarart "
+                        +    "foto_tarart, "
+                        +    "foto_2_tarart "
                         +    "FROM TARART(nolock) "
                         +    "WHERE (estado_tarart = '0' or "
                         +           "estado_tarart is null) and "
@@ -236,16 +374,27 @@ public class ControlProducto {
                         cte.put("nombre", nombre);
                         cte.put("puntos", puntos);
 
-                        String foto = rs.getString("foto_tarart");
-                        if(foto != null && !foto.trim().isEmpty()){
-                            foto = foto.trim();
-                            String base64 = this.codificarFoto(foto);
+                        String foto_ori = this.getPath(rs.getString("foto_tarart"));
+                        String foto_chica = this.getPath(rs.getString("foto_2_tarart"));
+                        
+                        if(foto_chica == null || foto_chica.trim().isEmpty()){
+                            
+                            foto_chica = this.redimensionarImgen(foto_ori);
+                            
+                            if(foto_chica != null){
+                                guardoFoto(codigo, foto_chica);
+                            }
+                        }
+                        
+                        if(foto_chica != null && !foto_chica.trim().isEmpty()){
+                            foto_chica = foto_chica.trim();
+                            String base64 = this.codificarFoto(foto_chica);
                             if(base64.compareTo("-1") != 0){
                                 cte.put("foto", base64);
                             }
                             else{
                                 cte.put("foto", "");
-                                conf.getLogger().log(Level.SEVERE, "Foto 2 en BASE64: " + foto + " " + codigo + " " + nombre);
+                                conf.getLogger().log(Level.SEVERE, "Foto en BASE64: " + foto_ori + " " + codigo + " " + nombre);
                             }
                         }else
                             cte.put("foto", "");
@@ -290,20 +439,21 @@ public class ControlProducto {
         ControlProducto tempObject = new ControlProducto();
         Configuracion conf = Configuracion.getConfig();
         String res;
-        path = tempObject.getPath(path);
         File fichero = null;
         
         try{
+            System.out.println("Path: "+path);
             fichero = new File(path);
         }
-        catch(NullPointerException e){
-            conf.getLogger().log(Level.SEVERE, "Foto no localizada: " + path);
+        catch(Exception e){
+            conf.getLogger().log(Level.WARNING, "Foto no localizada: " + path);
             e.printStackTrace();
             res = "-1";
             return res;
         }
-
+        System.out.println("Fichero: "+fichero);
         if(fichero.exists()){
+            System.out.println("entra");
             // convert file to regular byte array
             byte[] codedFile = tempObject.convertFileToByteArray(path);
 
@@ -313,7 +463,6 @@ public class ControlProducto {
             // print out the byte array
             res = new String(encodedFile, Charset.forName("UTF8"));
 
-            //res = Arrays.toString(encodedFile);
         }
         else{//No existe la Foto
             res = "-1";
@@ -352,8 +501,8 @@ public class ControlProducto {
     }
      
      /**
-      * Procedimiento que dado el path de la foto lo acomoda teniendo en cuenta
-      * las unidades mapeadas en el archivo de propiedades farmacia-properties
+      * Procedimiento que dado el path de la foto_chica lo acomoda teniendo en cuenta
+ las unidades mapeadas en el archivo de propiedades farmacia-properties
       * @param path
       * @return String
       */
