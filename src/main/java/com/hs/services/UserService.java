@@ -103,6 +103,33 @@ public class UserService {
 //            }
 //            return Response.ok(resp).build();
 //        }
+        
+        @POST
+        @Path("/actualizaDatos")
+        @Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response actualizaDatos(Map<String, String> parametros) throws URISyntaxException {
+            JSONObject resp = new JSONObject();    
+            if(!parametros.containsKey("tarjeta") || !parametros.containsKey("telefono") || 
+               !parametros.containsKey("nombre") || !parametros.containsKey("correo") || 
+               !parametros.containsKey("localidad") || !parametros.containsKey("codpos") ||
+               !parametros.containsKey("direccion") || !parametros.containsKey("fecnac")){
+                resp.put("salida", 9);
+                resp.put("msj", "No encuentra parametros de entrada (nombre - tarjeta - correo - telefono - codpos - fecnac - localidad - direccion)");
+                return Response.ok(resp).build();
+            }
+            
+            try{
+                resp = ControlUsuario.updateInfo(parametros);
+            }
+            catch(Exception e){
+                resp.put("salida", 9);
+                resp.put("msj", "Salida: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            return Response.ok(resp).build();
+        }
 
         //http://localhost:8080/restfull-web-services-app-master/rest/user/valida
         @POST

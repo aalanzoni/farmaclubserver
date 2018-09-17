@@ -73,7 +73,7 @@ public class ControlProducto {
                         resul.put("puntos", puntos);
                         resul.put("salida", 1);
 
-                        String foto = rs.getString("foto_tarart");
+                        String foto = this.getPath(rs.getString("foto_tarart"));
                         if(foto != null && !foto.trim().isEmpty()){
                             foto = foto.trim();
                             String base64 = this.codificarFoto(foto);
@@ -178,6 +178,7 @@ public class ControlProducto {
                         +    "m.descri_tarart, "
                         +    "m.puntos_tarart, "
                         +    "m.fec_vto_tarart, "
+                        +    "m.comen_tarart, "
                         +    "m.foto_tarart, "
                         +    "m.foto_2_tarart "
                         +    "FROM "
@@ -188,6 +189,7 @@ public class ControlProducto {
                         +    "descri_tarart, "
                         +    "puntos_tarart, "
                         +    "fec_vto_tarart, "
+                        +    "comen_tarart, "
                         +    "foto_tarart, "
                         +    "foto_2_tarart "
                         +    "FROM TARART(nolock) "
@@ -212,6 +214,7 @@ public class ControlProducto {
                         cte.put("codigo", codigo);
                         cte.put("nombre", nombre);
                         cte.put("puntos", puntos);
+                        cte.put("comentario", rs.getString("comen_tarart"));
                         String foto_ori = rs.getString("foto_tarart");
                         String foto_chica = rs.getString("foto_2_tarart");
                         if(foto_chica == null || foto_chica.trim().isEmpty()){
@@ -339,7 +342,8 @@ public class ControlProducto {
                         +    "m.descri_tarart, "
                         +    "m.puntos_tarart, "
                         +    "m.fec_vto_tarart, "
-                        +    "m.foto_tarart, "
+                        +    "m.comen_tarart, "
+                        +    "m.foto_tarart, "                        
                         +    "m.foto_2_tarart "
                         +    "FROM "
                         +    "(SELECT ROW_NUMBER() "
@@ -349,6 +353,7 @@ public class ControlProducto {
                         +    "descri_tarart, "
                         +    "puntos_tarart, "
                         +    "fec_vto_tarart, "
+                        +    "comen_tarart, "
                         +    "foto_tarart, "
                         +    "foto_2_tarart "
                         +    "FROM TARART(nolock) "
@@ -373,6 +378,7 @@ public class ControlProducto {
                         cte.put("codigo", codigo);
                         cte.put("nombre", nombre);
                         cte.put("puntos", puntos);
+                        cte.put("comentario", rs.getString("comen_tarart"));
 
                         String foto_ori = this.getPath(rs.getString("foto_tarart"));
                         String foto_chica = this.getPath(rs.getString("foto_2_tarart"));

@@ -218,11 +218,87 @@ public final class ControlUsuario {
         }
         return puntos;
     }
+    
+    public static JSONObject updateInfo(Map<String, String> parametros){
+        JSONObject resultado = new JSONObject();
+        Statement stmt = null;
+        try {
+            //nombre - tarjeta - correo - telefono - codpos - fecnac - localidad - direccion
+            String tarjeta = parametros.get("tarjeta").toString();
+            String nombre = parametros.get("nombre").toString();
+            String correo = parametros.get("correo").toString();
+            String telefono = parametros.get("telefono").toString();
+            
+            String codpos_s = parametros.get("codpos").trim();            
+            int codpos = 0;
+            if(!codpos_s.isEmpty() && codpos_s.length() > 0){
+                codpos = Integer.parseInt(codpos_s);
+            }
+            
+            String fecnac_s = parametros.get("fecnac").toString().trim();
+            int fecnac = Utilidades.obtenerFecha(fecnac_s);
+            
+            String localidad = parametros.get("localidad").toString();
+            String direccion = parametros.get("direccion").toString();
+            
+            ConexionDirecta c = ConexionDirecta.getConexion();
+            stmt = c.getConnection().createStatement();
+            
+            String sql = "update datos9 set nom_datos9 = '"+nombre+"', "+
+                              "mail_datos9 = '" + correo + "', " +
+                              "tel1_datos9 = '" + telefono + "', " +
+                              "cp_datos9 = " + codpos + ", " +
+                              "fec_nac_datos9 = "+ fecnac + ", " +
+                              "loc_datos9 = '" + localidad + "', " +
+                              "dom_datos9 = '" + direccion + "'" +
+                         "where codtar_datos9 = '" + tarjeta + "'";
+            
+            System.out.println("SQL Update: " + sql);
+            
+            stmt.executeUpdate(sql);
+            
+            resultado.put("salida", 1);
+            resultado.put("actualizaciones", stmt.getUpdateCount());
+            resultado.put("msj", "Informacion de Usuario Actualizada Exitosamente");
+        }
+        catch(SQLException ex){
+            System.out.println("SQL Exception: " + ex.getMessage());
+            System.out.println("SQL State: " + ex.getSQLState());
+            System.out.println("Error Code: " + ex.getErrorCode());
+            
+            ex.printStackTrace();
+            
+            Utilidades.sendErrorMail("Error en Actualizacion de informacion de Usuario " + 
+                    ex.getMessage()+" " + ex.getSQLState() + " " + ex.getErrorCode());
+
+            resultado.put("salida", 9);
+            resultado.put("actualizaciones", 0);
+            resultado.put("msj", "Error al Actualizar Informacion de Usuario "+ ex.getMessage());
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+            
+            Utilidades.sendErrorMail("Error en Actualizacion de informacion de Usuario " + ex.getMessage());
+
+            resultado.put("salida", 9);
+            resultado.put("actualizaciones", 0);
+            resultado.put("msj", "Error al Actualizar Informacion de Usuario "+ ex.getMessage());            
+        }
+        finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) { } // ignore
+
+                stmt = null;
+            }
+        }
+        return resultado;
+    }
 
     public static JSONObject updateUsuario(Map<String, String> parametros) throws Exception{
         JSONObject resultado = new JSONObject();
         Statement stmt = null;
-        ResultSet rs = null;
         try {
             String tarjeta = parametros.get("tarjeta").toString();
             String user = parametros.get("usuario").toString();
@@ -249,26 +325,28 @@ public final class ControlUsuario {
             resultado.put("actualizaciones", stmt.getUpdateCount());
             resultado.put("msj", "Usuario Actualizado Exitosamente");
         }
-        catch(SQLException ex){
-            // handle any errors
-            Utilidades.sendErrorMail(ex.getMessage()+" " + ex.getSQLState() + " " + ex.getErrorCode());
+        catch(SQLException ex){            
             System.out.println("SQLException: " + ex.getMessage());
             System.out.println("SQLState: " + ex.getSQLState());
             System.out.println("VendorError: " + ex.getErrorCode());
+            ex.printStackTrace();
+            Utilidades.sendErrorMail("Error al actualizar usuario " + 
+                    ex.getMessage()+" " + ex.getSQLState() + " " + ex.getErrorCode());
 
             resultado.put("salida", 9);
             resultado.put("actualizaciones", 0);
             resultado.put("msj", "Error al actualizar usuario "+ ex.getMessage());
         }
+        catch(Exception ex){
+            ex.printStackTrace();
+            
+            Utilidades.sendErrorMail("Error en Actualizacion de informacion de Usuario " + ex.getMessage());
+
+            resultado.put("salida", 9);
+            resultado.put("actualizaciones", 0);
+            resultado.put("msj", "Error al actualizar usuario "+ ex.getMessage());            
+        }
         finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException sqlEx) { } // ignore
-
-                rs = null;
-            }
-
             if (stmt != null) {
                 try {
                     stmt.close();
@@ -279,6 +357,8 @@ public final class ControlUsuario {
         }
         return resultado;
     }
+    
+    
 
     public static boolean existeUsuario(String usuario, String tarjeta) throws Exception {
         boolean res = true;
@@ -327,7 +407,17 @@ public final class ControlUsuario {
             //ConexionDirecta cd = new ConexionDirecta();
             ConexionDirecta c = ConexionDirecta.getConexion();
             if(c != null){
-                String SQL = "SELECT 1 as valido, codtar_datos9, nom_datos9, descuento_datos9, mail_datos9 FROM datos9 (nolock) where ";
+                String SQL = "SELECT 1 as valido, " +
+                                  "codtar_datos9, " +
+                                  "nom_datos9, " +
+                                  "descuento_datos9, " +
+                                  "mail_datos9, " +
+                                  "tel1_datos9, " +
+                                  "dom_datos9, " +
+                                  "cp_datos9, " +
+                                  "loc_datos9, " +
+                                  "fec_nac_datos9 " +
+                             "FROM datos9 (nolock) where ";
 
                 if (primera)  //Primer loggin valida contra la tarjeta de puntos.
                     SQL += "codtar_datos9 = '" + nombre + "'";
@@ -337,6 +427,8 @@ public final class ControlUsuario {
                 SQL += " and password_datos9 = '" + pass + "'";
                 SQL += " COLLATE Latin1_General_CS_AS";
 
+                System.out.println("SQL valida: "+ SQL);
+                
                 Statement stmt = c.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery(SQL);
 
@@ -349,13 +441,24 @@ public final class ControlUsuario {
                             resul.put("tarjeta", rs.getString("codtar_datos9"));
                             resul.put("nombre", rs.getString("nom_datos9"));
                             resul.put("correo", rs.getString("mail_datos9"));
+                            resul.put("telefono", rs.getString("tel1_datos9"));
+                            resul.put("domicilio", rs.getString("dom_datos9"));
+                            resul.put("codpos", rs.getInt("cp_datos9"));
+                            resul.put("localidad", rs.getString("loc_datos9"));
+                            resul.put("fecnac", Utilidades.diaMesAnio(rs.getInt("fec_nac_datos9")));
                             resul.put("msj", "OK");
                         }else{
                             resul.put("salida", 9);
-                            resul.put("tarjeta", 0);
+                            resul.put("tarjeta", "");
                             resul.put("nombre", "");
                             resul.put("puntos", 0);
                             resul.put("correo", "");
+                            resul.put("telefono", "");
+                            resul.put("domicilio", "");
+                            resul.put("codpos", 0);
+                            resul.put("localidad", "");
+                            resul.put("fecnac", 0);
+
                             resul.put("msj", "Usuario No localizado");
                         }
 
@@ -363,10 +466,15 @@ public final class ControlUsuario {
                     }
                 else{
                     resul.put("salida", 9);
-                    resul.put("tarjeta", 0);
+                    resul.put("tarjeta", "");
                     resul.put("nombre", "");
                     resul.put("puntos", 0);
                     resul.put("correo", "");
+                    resul.put("telefono", "");
+                    resul.put("domicilio", "");
+                    resul.put("codpos", 0);
+                    resul.put("localidad", "");
+                    resul.put("fecnac", 0);
                     resul.put("msj", "Usuario No localizado");
                 }
                 stmt.close();
