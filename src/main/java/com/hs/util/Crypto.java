@@ -72,7 +72,7 @@ public class Crypto {
     
     public static void main(String a[]){
         try{
-            String encriptado = Crypto.Encriptar("el nigga iona");
+            String encriptado = Crypto.Encriptar("highsoft852");
             System.out.println("Cript: "+encriptado);
         
             String desencriptado = Crypto.Desencriptar(encriptado);

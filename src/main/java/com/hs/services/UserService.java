@@ -131,6 +131,30 @@ public class UserService {
             return Response.ok(resp).build();
         }
 
+        @POST
+        @Path("/getCatUsu")
+        @Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCategoriasUsuario(Map<String, String> parametros) throws URISyntaxException {
+            JSONObject resp = new JSONObject();    
+            if(!parametros.containsKey("tarjeta")){
+                resp.put("salida", 9);
+                resp.put("msj", "No encuentra parametros de entrada (tarjeta)");
+                return Response.ok(resp).build();
+            }
+            
+            try{
+                resp = ControlUsuario.getCategoriasAsignadas(parametros.get("tarjeta"));
+            }
+            catch(Exception e){
+                resp.put("salida", 9);
+                resp.put("msj", "Salida: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            return Response.ok(resp).build();
+        }        
+        
         //http://localhost:8080/restfull-web-services-app-master/rest/user/valida
         @POST
         @Path("/valida")

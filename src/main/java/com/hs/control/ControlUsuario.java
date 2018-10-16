@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import java.util.stream.IntStream;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 
@@ -77,6 +78,85 @@ public final class ControlUsuario {
                 stmt.close();
             if (rs != null)
                 rs = null;
+        }
+        return resul;
+    }
+    
+    public static JSONObject getCategoriasAsignadas(String tarjeta) throws Exception{
+        JSONObject resul = new JSONObject();
+        Statement stmt = null;
+        ResultSet rs = null;
+        try{
+            ConexionDirecta con = ConexionDirecta.getConexion();
+            if(con != null){
+                String sql = "select codigo_catart, " + 
+                                    "nombre_catart, " +
+	                            "descripcion_catart, " +
+                                    "codtar_predat "+
+                             "from catart(nolock) left join " +
+                                  "predat(nolock) on " +
+                                     "codigo_catart = codref_predat " +
+                             "where estado_catart = 0 and " +
+                                "(codtar_predat = "+ tarjeta +" or " +
+                                 "codtar_predat is null)";
+                
+                System.out.println("SQL Update: " + sql);
+                
+                stmt = con.getConnection().createStatement();
+                rs = stmt.executeQuery(sql);
+                if(rs.isBeforeFirst()){
+                    JSONArray categorias = new JSONArray();
+                    int cant = 0;
+                    while (rs.next()) {
+                        JSONObject cte = new JSONObject();
+                        String codigo = rs.getString("codigo_catart");
+                        String categoria = rs.getString("nombre_catart");
+                        String descripcion = rs.getString("descripcion_catart");
+                        String activa = rs.getString("codtar_predat");
+                        cte.put("codigo", codigo);
+                        cte.put("categoria", categoria);
+                        cte.put("descripcion", descripcion);
+                        if (activa == null || activa.trim().isEmpty()){
+                            cte.put("activa", 0);
+                        }
+                        else{
+                            cte.put("activa", 1);
+                        }
+                        categorias.add(cte);
+                        cant ++;
+                    }
+                    resul.put("salida", 1);
+                    resul.put("msj", "OK");
+                    resul.put("cantidad", cant);
+                    resul.put("categorias", categorias);
+                }
+                
+            }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            Utilidades.sendErrorMail(e.getMessage());
+            resul.put("salida", 9);
+            resul.put("msj", "Error get categorias: " + e.getMessage());
+            resul.put("cantidad", 0);
+            resul.put("categorias", null);
+        }
+        finally{
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) { } // ignore
+
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) { } // ignore
+
+                stmt = null;
+            }
         }
         return resul;
     }
@@ -244,7 +324,7 @@ public final class ControlUsuario {
             ConexionDirecta c = ConexionDirecta.getConexion();
             stmt = c.getConnection().createStatement();
             
-            String sql = "update datos9 set nom_datos9 = '"+nombre+"', "+
+            String sql = "update datos9 set nom_datos9 = '" + nombre + "', "+
                               "mail_datos9 = '" + correo + "', " +
                               "tel1_datos9 = '" + telefono + "', " +
                               "cp_datos9 = " + codpos + ", " +
