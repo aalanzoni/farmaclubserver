@@ -6,6 +6,7 @@
 package com.hs.control;
 
 import com.hs.util.ConexionDirecta;
+import com.hs.util.Configuracion;
 import com.hs.util.Constantes;
 import com.hs.util.Mail;
 import com.hs.util.Utilidades;
@@ -16,9 +17,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
+import java.util.logging.Level;
 import java.util.stream.IntStream;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
 
 
 /**
@@ -26,6 +30,7 @@ import org.json.simple.JSONObject;
  * @author Andres Lanzoni
  */
 public final class ControlUsuario {
+    static Configuracion conf = Configuracion.getConfig();
 
     public ControlUsuario(){
         super();
@@ -40,6 +45,7 @@ public final class ControlUsuario {
 
             if(con != null){
                 String sql = "select 1 as existe, nom_datos9 from DATOS9(nolock) where estado_datos9 = 0 and codtar_datos9 = '" + tarjeta + "'";
+                conf.getLogger().log(Level.INFO,"procedimiento existeTarjeta" + tarjeta + " SQL: " + sql);
                 stmt = con.getConnection().createStatement();
                 rs = stmt.executeQuery(sql);
                 if(rs.isBeforeFirst())
@@ -71,6 +77,7 @@ public final class ControlUsuario {
             resul.put("usuario", "");
             resul.put("salida", 9);
             resul.put("msj", e.getMessage());
+            conf.getLogger().log(Level.SEVERE,"procedimiento existeTarjeta" + tarjeta, e);
             throw e;
         }
         finally{
@@ -78,6 +85,22 @@ public final class ControlUsuario {
                 stmt.close();
             if (rs != null)
                 rs = null;
+        }
+        return resul;
+    }
+    
+    public static JSONObject updateCategoriasAsignadas(String tarjeta, Map<String, String> parametros) throws Exception{
+        JSONObject resul = new JSONObject();
+        Statement stmt = null;
+        ResultSet rs = null;
+        try{
+            ConexionDirecta con = ConexionDirecta.getConexion();
+            if(con != null){
+                
+            }
+        }
+        catch(Exception e){
+            
         }
         return resul;
     }
@@ -101,6 +124,7 @@ public final class ControlUsuario {
                                  "codtar_predat is null)";
                 
                 System.out.println("SQL Update: " + sql);
+                conf.getLogger().log(Level.INFO,"procedimiento getCategoriasAsignadas, tarjeta: " + tarjeta + " SQL: " + sql);
                 
                 stmt = con.getConnection().createStatement();
                 rs = stmt.executeQuery(sql);
@@ -134,7 +158,8 @@ public final class ControlUsuario {
             }
         }
         catch(Exception e){
-            e.printStackTrace();
+            //e.printStackTrace();
+            conf.getLogger().log(Level.SEVERE,"procedimiento getCategoriasAsignadas" + tarjeta, e);
             Utilidades.sendErrorMail(e.getMessage());
             resul.put("salida", 9);
             resul.put("msj", "Error get categorias: " + e.getMessage());
@@ -171,6 +196,7 @@ public final class ControlUsuario {
                 String sql = "select mail_datos9 as correo from datos9 (nolock) where codtar_datos9 = '"+
                         tarjeta +
                         "' and estado_datos9 = 0";
+                conf.getLogger().log(Level.INFO,"procedimiento resetPass" + tarjeta + " SQL: " + sql);
                 stmt = con.getConnection().createStatement();
                 rs = stmt.executeQuery(sql);
                 if(rs.isBeforeFirst()){
@@ -192,6 +218,8 @@ public final class ControlUsuario {
                                         " where codtar_datos9 = '" +
                                         tarjeta +
                                         "' and estado_datos9 = 0";
+                                
+                                conf.getLogger().log(Level.INFO,"procedimiento resetPass <update> " + tarjeta + " SQL: " + sql);
 
                                 stmt.executeUpdate(sql);
 
@@ -236,7 +264,8 @@ public final class ControlUsuario {
             }
         }
         catch(Exception e){
-            e.printStackTrace();
+            //e.printStackTrace();
+            conf.getLogger().log(Level.SEVERE,"procedimiento resetPass " + tarjeta, e);
             Utilidades.sendErrorMail(e.getMessage());
             resul.put("salida", 9);
             resul.put("pass", "");
@@ -271,8 +300,9 @@ public final class ControlUsuario {
         try{
             ConexionDirecta con = ConexionDirecta.getConexion();
             if(con != null){
-                String sql = "SELECT sum(puntos_hiscre) as puntos FROM HISCRE (nolock) where codtar_hiscre = '" + tarjeta +"'";
+                String sql = "SELECT sum(puntos_hiscre) as puntos FROM HISCRE (nolock) where codtar_hiscre = '" + tarjeta +"'";                
                 sql += " and (estado_hiscre = ' ' or estado_hiscre is null)";
+                conf.getLogger().log(Level.INFO,"procedimiento getPuntos - tarjeta: "+ tarjeta +" SQL: "+ sql);
                 stmt = con.getConnection().createStatement();
                 rs = stmt.executeQuery(sql);
 
@@ -283,6 +313,7 @@ public final class ControlUsuario {
             }
         }
         catch(Exception e){
+            conf.getLogger().log(Level.SEVERE,"procedimiento getPuntos " + tarjeta, e);
             Utilidades.sendErrorMail(e.getMessage());
             throw e;
         }
@@ -333,7 +364,8 @@ public final class ControlUsuario {
                               "dom_datos9 = '" + direccion + "'" +
                          "where codtar_datos9 = '" + tarjeta + "'";
             
-            System.out.println("SQL Update: " + sql);
+            //System.out.println("sql Update: " + sql);
+            conf.getLogger().log(Level.INFO,"procedimiento updateInfo " + parametros +" SQL: "+sql);
             
             stmt.executeUpdate(sql);
             
@@ -342,11 +374,12 @@ public final class ControlUsuario {
             resultado.put("msj", "Informacion de Usuario Actualizada Exitosamente");
         }
         catch(SQLException ex){
-            System.out.println("SQL Exception: " + ex.getMessage());
-            System.out.println("SQL State: " + ex.getSQLState());
-            System.out.println("Error Code: " + ex.getErrorCode());
+//            System.out.println("sql Exception: " + ex.getMessage());
+//            System.out.println("sql State: " + ex.getSQLState());
+//            System.out.println("Error Code: " + ex.getErrorCode());
             
-            ex.printStackTrace();
+            //ex.printStackTrace();
+           conf.getLogger().log(Level.SEVERE,"procedimiento updateInfo " + parametros, ex);
             
             Utilidades.sendErrorMail("Error en Actualizacion de informacion de Usuario " + 
                     ex.getMessage()+" " + ex.getSQLState() + " " + ex.getErrorCode());
@@ -356,7 +389,8 @@ public final class ControlUsuario {
             resultado.put("msj", "Error al Actualizar Informacion de Usuario "+ ex.getMessage());
         }
         catch(Exception ex){
-            ex.printStackTrace();
+            //ex.printStackTrace();
+            conf.getLogger().log(Level.SEVERE,"procedimiento updateInfo " + parametros, ex);
             
             Utilidades.sendErrorMail("Error en Actualizacion de informacion de Usuario " + ex.getMessage());
 
@@ -398,7 +432,7 @@ public final class ControlUsuario {
             String sql = "update datos9 set usuario_datos9 = '" + user +"', ";
             sql += "password_datos9 = '" + pass +"' ";
             sql += "where codtar_datos9 = '" + tarjeta +"'";
-
+            conf.getLogger().log(Level.INFO,"procedimiento updateUsuario " + parametros + " SQL: " + sql);
             stmt.executeUpdate(sql);
 
             resultado.put("salida", 1);
@@ -406,10 +440,11 @@ public final class ControlUsuario {
             resultado.put("msj", "Usuario Actualizado Exitosamente");
         }
         catch(SQLException ex){            
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
-            ex.printStackTrace();
+//            System.out.println("SQLException: " + ex.getMessage());
+//            System.out.println("SQLState: " + ex.getSQLState());
+//            System.out.println("VendorError: " + ex.getErrorCode());
+//            ex.printStackTrace();
+            conf.getLogger().log(Level.SEVERE,"procedimiento updateUsuario " + parametros, ex);
             Utilidades.sendErrorMail("Error al actualizar usuario " + 
                     ex.getMessage()+" " + ex.getSQLState() + " " + ex.getErrorCode());
 
@@ -418,7 +453,8 @@ public final class ControlUsuario {
             resultado.put("msj", "Error al actualizar usuario "+ ex.getMessage());
         }
         catch(Exception ex){
-            ex.printStackTrace();
+//            ex.printStackTrace();
+            conf.getLogger().log(Level.SEVERE,"procedimiento updateUsuario " + parametros, ex);
             
             Utilidades.sendErrorMail("Error en Actualizacion de informacion de Usuario " + ex.getMessage());
 
@@ -451,7 +487,9 @@ public final class ControlUsuario {
 
             if (tarjeta != null)
                 sql += " and codtar != '"+tarjeta+"'";
-
+            
+            conf.getLogger().log(Level.INFO,"procedimiento existeUsuario " + tarjeta + "SQL: " + sql);
+            
             rs = stmt.executeQuery(sql);
             if(rs.isBeforeFirst())
                 while (rs.next()) {
@@ -463,7 +501,8 @@ public final class ControlUsuario {
                 res = false;
         }
         catch(Exception e){            
-            e.printStackTrace();
+            //e.printStackTrace();
+            conf.getLogger().log(Level.SEVERE,"procedimiento existeUsuario " + tarjeta, e);
             Utilidades.sendErrorMail(e.getMessage());
             throw e;
             
@@ -487,7 +526,7 @@ public final class ControlUsuario {
             //ConexionDirecta cd = new ConexionDirecta();
             ConexionDirecta c = ConexionDirecta.getConexion();
             if(c != null){
-                String SQL = "SELECT 1 as valido, " +
+                String sql = "SELECT 1 as valido, " +
                                   "codtar_datos9, " +
                                   "nom_datos9, " +
                                   "descuento_datos9, " +
@@ -500,17 +539,18 @@ public final class ControlUsuario {
                              "FROM datos9 (nolock) where ";
 
                 if (primera)  //Primer loggin valida contra la tarjeta de puntos.
-                    SQL += "codtar_datos9 = '" + nombre + "'";
+                    sql += "codtar_datos9 = '" + nombre + "'";
                 else
-                    SQL += "usuario_datos9 = '" + nombre + "'";
+                    sql += "usuario_datos9 = '" + nombre + "'";
 
-                SQL += " and password_datos9 = '" + pass + "'";
-                SQL += " COLLATE Latin1_General_CS_AS";
+                sql += " and password_datos9 = '" + pass + "'";
+                sql += " COLLATE Latin1_General_CS_AS";
 
-                System.out.println("SQL valida: "+ SQL);
+                conf.getLogger().log(Level.INFO,"procedimiento validaUsuario "+nombre + " " + pass + " SQL: " + sql);
+                //System.out.println("sql valida: "+ sql);
                 
                 Statement stmt = c.getConnection().createStatement();
-                ResultSet rs = stmt.executeQuery(SQL);
+                ResultSet rs = stmt.executeQuery(sql);
 
                 if(rs.isBeforeFirst())
                     while (rs.next()) {
@@ -525,7 +565,7 @@ public final class ControlUsuario {
                             resul.put("domicilio", rs.getString("dom_datos9"));
                             resul.put("codpos", rs.getInt("cp_datos9"));
                             resul.put("localidad", rs.getString("loc_datos9"));
-                            resul.put("fecnac", Utilidades.diaMesAnio(rs.getInt("fec_nac_datos9")));
+                            resul.put("fecnac", Utilidades.diaMesAnioString(rs.getInt("fec_nac_datos9")));
                             resul.put("msj", "OK");
                         }else{
                             resul.put("salida", 9);
@@ -561,7 +601,8 @@ public final class ControlUsuario {
             }
         }
         catch(Exception e){
-            e.printStackTrace();
+            //e.printStackTrace();
+            conf.getLogger().log(Level.SEVERE,"procedimiento validaUsuario " + nombre + " " + pass, e);
             Utilidades.sendErrorMail(e.getMessage());
         }
         finally{

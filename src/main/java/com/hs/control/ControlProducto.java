@@ -32,13 +32,13 @@ import org.json.simple.JSONObject;
  * @author Andres Lanzoni
  */
 public class ControlProducto {
+    static Configuracion conf = Configuracion.getConfig();
 
     public ControlProducto() {
         super();
     }
 
-    public JSONObject getProductoCodigo(String code, String para) throws Exception {
-        Configuracion conf = Configuracion.getConfig();
+    public JSONObject getProductoCodigo(String code, String para) throws Exception {        
         Statement stmt = null;
         ResultSet rs = null;
         JSONObject resul = new JSONObject();
@@ -55,10 +55,11 @@ public class ControlProducto {
                         + "foto_tarart "
                         + "FROM "
                         + "TARART(nolock) "
-                        + "WHERE codigo_tarart = '" + code + "'"
+                        + "WHERE codigo_tarart = '" + code + "' and "
                         + "para_tarart = '" + para + "'";
-
-                System.out.println("SQL: " + sql);
+                
+                conf.getLogger().log(Level.INFO, "procedimiento getProductoCodigo, code: {0} para: {1} SQL: {2}", 
+                        new Object[]{code, para, sql});
                 stmt = con.getConnection().createStatement();
                 rs = stmt.executeQuery(sql);
                 if (rs.isBeforeFirst()) {
@@ -90,9 +91,18 @@ public class ControlProducto {
                         break;
                     }
                 }
+                else{
+                    resul.put("salida", 2);
+                    resul.put("msj", "No existe Producto");
+                    resul.put("codigo", 0);
+                    resul.put("nombre", "");
+                    resul.put("puntos", 0);
+                    resul.put("foto", "");
+                    return resul;
+                }                
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            conf.getLogger().log(Level.SEVERE,"procedimiento getProductoCodigo, code: " + code + " para: "+ para , e);
             Utilidades.sendErrorMail(e.getMessage());
             resul.put("salida", 9);
             resul.put("msj", e.getMessage());
@@ -118,8 +128,7 @@ public class ControlProducto {
         return resul;
     }
 
-    public JSONObject getProductosPuntos(String tarjeta, int desde, int hasta, String orden) throws Exception {
-        Configuracion conf = Configuracion.getConfig();
+    public JSONObject getProductosPuntos(String tarjeta, int desde, int hasta, String orden) throws Exception {        
         Statement stmt = null;
         ResultSet rs = null;
         JSONObject resul = new JSONObject();
@@ -135,21 +144,27 @@ public class ControlProducto {
                         + "codtar_hiscre = codtar_datos9 "
                         + "WHERE codtar_datos9 = '" + tarjeta + "' and "
                         + "(estado_datos9 = '0' or estado_datos9 is null)";
+                conf.getLogger().log(Level.INFO, "procedimiento getProductoPuntos, tarjeta: {0} desde: {1} hasta: {2} orden: {3} SQL: {4}",
+                        new Object[]{tarjeta, desde, hasta, orden, sql});
                 rs = stmt.executeQuery(sql);
                 if (rs.isBeforeFirst()) {
                     rs.next();
                     ptos = rs.getInt("puntos");
-                    System.out.println("======>>>   PUNTOS: " + ptos);
-
                     if (ptos == 0) {
+                        JSONArray productos = new JSONArray();
                         resul.put("salida", 2);
                         resul.put("msj", "Tarjeta sin Puntos");
+                        resul.put("cantidad", 0);
+                        resul.put("productos", productos);
                         return resul;
                     }
 
                 } else {//No hay tarjeta
+                    JSONArray productos = new JSONArray();
                     resul.put("salida", 2);
-                    resul.put("msj", "Tarjeta sin puntos");
+                    resul.put("msj", "Tarjeta sin Puntos");
+                    resul.put("cantidad", 0);
+                    resul.put("productos", productos);
                     return resul;
                 }
                 rs.close();
@@ -162,12 +177,13 @@ public class ControlProducto {
                         + "fec_vto_tarart > GETDATE() and "
                         + "puntos_tarart <= " + ptos
                         + " and para_tarart = 'C'";
-
+                
+                conf.getLogger().log(Level.INFO, "procedimiento getProductoPuntos, tarjeta: {0} desde: {1} hasta: {2} orden: {3} SQL: {4}", 
+                        new Object[]{tarjeta, desde, hasta, orden, sql});
                 rs = stmt.executeQuery(sql);
                 if (rs.isBeforeFirst()) {
                     rs.next();
-                    cant = rs.getInt("cantidad");
-                    System.out.println("======>>>   Cantidad de Productos: " + cant + " para puntos: " + ptos);
+                    cant = rs.getInt("cantidad");                    
                 }
                 rs.close();
 
@@ -199,7 +215,8 @@ public class ControlProducto {
                         + "puntos_tarart <= " + ptos + ")m "
                         + "where RowNr between " + desde + " and " + hasta;
 
-                System.out.println("SQL: " + sql);
+                conf.getLogger().log(Level.INFO, "procedimiento getProductoPuntos, tarjeta: {0} desde: {1} hasta: {2} orden: {3} SQL: {4}", 
+                        new Object[]{tarjeta, desde, hasta, orden, sql});
 
                 rs = stmt.executeQuery(sql);
                 if (rs.isBeforeFirst()) {
@@ -228,7 +245,8 @@ public class ControlProducto {
                             if (base64.compareTo("-1") != 0) {
                                 cte.put("foto", base64);
                             } else {
-                                conf.getLogger().log(Level.SEVERE, "Foto en BASE64: " + foto_chica + " " + codigo + " " + nombre);
+                                conf.getLogger().log(Level.SEVERE, "Foto en BASE64: {0} {1} {2}",
+                                        new Object[]{foto_chica, codigo, nombre});
                             }
                         } else {
                             cte.put("foto", "");
@@ -275,8 +293,8 @@ public class ControlProducto {
 
         if (foto_ori == null || foto_ori.trim().isEmpty()) {
             return null;
-        }
-        System.out.println("Foto a Redimensionar: " + foto_ori);
+        }        
+        conf.getLogger().log(Level.INFO, "Foto a Redimensionar: " + foto_ori);
         Image img = null;
         BufferedImage tempPNG = null;
         File newFilePNG = null;
@@ -288,7 +306,8 @@ public class ControlProducto {
             newFilePNG = new File(foto);
             ImageIO.write(tempPNG, "png", newFilePNG);
         } catch (IOException e) {
-            conf.getLogger().log(Level.SEVERE, "Error al redimensionar FOTO: " + foto_ori + " " + e.getMessage());
+            conf.getLogger().log(Level.SEVERE, "Error al redimensionar FOTO: {0} {1}", 
+                    new Object[]{foto_ori, e.getMessage()});
             return null;
         }
 
@@ -301,7 +320,10 @@ public class ControlProducto {
         if (con != null) {
             stmt = con.getConnection().createStatement();
             String sql = "update tarart set foto_2_tarart = '" + name + "' where codigo_tarart = '" + code + "'";
-            System.out.println("SQL --->>> " + sql);
+
+            conf.getLogger().log(Level.INFO, "Error al redimensionar FOTO: {0} {1} {2}", 
+                    new Object[]{code, name, sql});
+            
             stmt.executeUpdate(sql);
         }
 
@@ -315,6 +337,139 @@ public class ControlProducto {
         }
     }
 
+/**
+ * 
+ * @param desde
+ * @param hasta
+ * @param orden
+ * @param categorias
+ * @return
+ * @throws Exception 
+ */    
+    public JSONObject getProductosCategorias(int desde, int hasta, String orden, String categorias) throws Exception{        
+        Statement stmt = null;
+        ResultSet rs = null;
+        JSONObject resul = new JSONObject();
+        try {
+            ConexionDirecta con = ConexionDirecta.getConexion();
+            if (con != null) {
+                stmt = con.getConnection().createStatement();
+                int cant = 0;
+                String sql = "SELECT "
+                        + "m.empre_tarart, "
+                        + "m.codigo_tarart, "
+                        + "m.descri_tarart, "
+                        + "m.puntos_tarart, "
+                        + "m.fec_vto_tarart, "
+                        + "m.comen_tarart, "
+                        + "m.foto_tarart, "
+                        + "m.foto_2_tarart, "
+                        + "m.codigo_ca_artcat "
+                        + "FROM "
+                        + "(SELECT ROW_NUMBER() "
+                        + "OVER (order by " + orden + " ) as RowNr,"
+                        + "empre_tarart, "
+                        + "codigo_tarart, "
+                        + "descri_tarart, "
+                        + "puntos_tarart, "
+                        + "fec_vto_tarart, "
+                        + "comen_tarart, "
+                        + "foto_tarart, "
+                        + "foto_2_tarart, "
+                        + "codigo_ca_artcat "
+                        + "FROM TARART(nolock) join "
+                        + " ARTCAT(nolock) on "
+	                +       "codigo_tarart = codigo_ta_artcat and "
+                        +       "codigo_ca_artcat in (" + categorias + ")"
+                        + "WHERE (estado_tarart <> 'SUSPENDIDO' or "
+                        + "estado_tarart is null) and "
+                        + "fec_vto_tarart > GETDATE() and "
+                        + "para_tarart = 'P')m "
+                        + "where RowNr between " + desde + " and " + hasta;
+                
+                conf.getLogger().log(Level.INFO, "getProductosCategorias: {0} {1} {2} {3} {4}", 
+                    new Object[]{desde, hasta, orden, categorias, sql});
+
+                rs = stmt.executeQuery(sql);
+                if (rs.isBeforeFirst()) {
+                    JSONArray productos = new JSONArray();
+
+                    while (rs.next()) {
+                        JSONObject cte = new JSONObject();
+                        String codigo = rs.getString("codigo_tarart");
+                        String nombre = rs.getString("descri_tarart");
+                        int puntos = rs.getInt("puntos_tarart");
+
+                        cte.put("codigo", codigo);
+                        cte.put("nombre", nombre);
+                        cte.put("puntos", puntos);
+                        cte.put("comentario", rs.getString("comen_tarart"));
+
+                        String foto_ori = this.getPath(rs.getString("foto_tarart"));
+                        String foto_chica = this.getPath(rs.getString("foto_2_tarart"));
+
+                        if (foto_chica == null || foto_chica.trim().isEmpty()) {
+
+                            foto_chica = this.redimensionarImgen(foto_ori);
+
+                            if (foto_chica != null) {
+                                guardoFoto(codigo, foto_chica);
+                            }
+                        }
+
+                        if (foto_chica != null && !foto_chica.trim().isEmpty()) {
+                            foto_chica = foto_chica.trim();
+                            String base64 = this.codificarFoto(foto_chica);
+                            if (base64.compareTo("-1") != 0) {
+                                cte.put("foto", base64);
+                            } else {
+                                cte.put("foto", "");
+                                conf.getLogger().log(Level.SEVERE, "getProductosCategorias - BASE64: {0} {1} {2} {3} {4}", 
+                                    new Object[]{desde, hasta, orden, categorias, foto_chica});
+                            }
+                        } else {
+                            cte.put("foto", "");
+                        }
+
+                        productos.add(cte);
+                    }
+                    resul.put("salida", 1);
+                    resul.put("msj", "OK");
+                    resul.put("cantidad", cant);
+                    resul.put("productos", productos);
+                }
+            }
+        } 
+        catch (Exception e) {
+            conf.getLogger().log(Level.SEVERE, "Error en getProductosEnCanje: " + e.getMessage());
+            e.printStackTrace();
+            Utilidades.sendErrorMail(e.getMessage());
+            resul.put("salida", 9);
+            resul.put("msj", "Error get canjes: " + e.getMessage());
+        } 
+        finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                } // ignore
+
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                } // ignore
+
+                stmt = null;
+            }
+        }
+        return resul;
+    }
+    
+    
     /**
      * Procedimiento que retorna los productos en Canje o Promocion.
      *
@@ -325,8 +480,7 @@ public class ControlProducto {
      * @return
      * @throws Exception
      */
-    public JSONObject getProductos(int desde, int hasta, String orden, String para) throws Exception {
-        Configuracion conf = Configuracion.getConfig();
+    public JSONObject getProductos(int desde, int hasta, String orden, String para) throws Exception {        
         Statement stmt = null;
         ResultSet rs = null;
         JSONObject resul = new JSONObject();
@@ -340,7 +494,10 @@ public class ControlProducto {
                         + "estado_tarart is null) and "
                         + "fec_vto_tarart > GETDATE() and "
                         + "para_tarart = '" + para + "'";
-                System.out.println("SQL: "+sql);
+                
+                conf.getLogger().log(Level.INFO, "procedimiento getProductos - cantidad, : {0} {1} {2} {3} {4}", 
+                        new Object[]{desde, hasta, orden, para, sql});
+                
                 rs = stmt.executeQuery(sql);
                 if (rs.isBeforeFirst()) {
                     rs.next();
@@ -374,8 +531,9 @@ public class ControlProducto {
                         + "fec_vto_tarart > GETDATE() and "
                         + "para_tarart = '" + para + "')m "
                         + "where RowNr between " + desde + " and " + hasta;
-
-                System.out.println("SQL: " + sql);
+                
+                conf.getLogger().log(Level.INFO, "procedimiento getProductos - principal, : {0} {1} {2} {3} {4}", 
+                        new Object[]{desde, hasta, orden, para, sql});
 
                 rs = stmt.executeQuery(sql);
                 if (rs.isBeforeFirst()) {
@@ -424,10 +582,17 @@ public class ControlProducto {
                     resul.put("cantidad", cant);
                     resul.put("productos", productos);
                 }
+                else{
+                    JSONArray productos = new JSONArray();
+                    resul.put("salida", 2);
+                    resul.put("msj", "Tarjeta sin Puntos");
+                    resul.put("cantidad", 0);
+                    resul.put("productos", productos);
+                    return resul;
+                }
             }
         } catch (Exception e) {
-            conf.getLogger().log(Level.SEVERE, "Error en getProductosEnCanje: " + e.getMessage());
-            e.printStackTrace();
+            conf.getLogger().log(Level.SEVERE, "Error en getProductos: " + e);
             Utilidades.sendErrorMail(e.getMessage());
             resul.put("salida", 9);
             resul.put("msj", "Error get canjes: " + e.getMessage());
@@ -463,11 +628,10 @@ public class ControlProducto {
             fichero = new File(path);
         } catch (Exception e) {
             conf.getLogger().log(Level.WARNING, "Foto no localizada: " + path);
-            e.printStackTrace();
             res = "-1";
             return res;
         }
-        System.out.println("Fichero: " + fichero);
+        
         if (fichero.exists()) {
             // convert file to regular byte array
             byte[] codedFile = tempObject.convertFileToByteArray(path);
@@ -550,8 +714,9 @@ public class ControlProducto {
     public static void main(String a[]) {
         ControlProducto cp = new ControlProducto();
         try {
-
-            System.out.println("PATH: " + cp.getPath("P:\\ACU\\SISTEMA\\IMG_FARMACLUB\\ESMALTE.JPG"));
+            System.out.println("salida: "+cp.getProductos(1, 10, "codigo_tarart asc", "P"));
+            //System.out.println("PATH: " + cp.getPath("P:\\ACU\\SISTEMA\\IMG_FARMACLUB\\ESMALTE.JPG"));
+            
 //             String codificado = cp.codificarFoto("D:\\farmacia.jpg");
 //             //System.out.println("codificado: " + codificado);
 //             byte[] b = codificado.getBytes();

@@ -34,13 +34,11 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>1.7.5</version>
-        <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-nop</artifactId>
-        <version>1.7.5</version>
-        <scope>test</scope>
+        <version>1.7.5</version>        
     </dependency>
     <dependency>
         <groupId>junit</groupId>
@@ -69,9 +67,15 @@
         <artifactId>commons-codec</artifactId>
         <version>1.10</version>
     </dependency>
-     
+
+
   </dependencies>
   
+    <!--  slf4j-nop.jar 
+  slf4j-simple.jar, 
+  slf4j-log4j12.jar, 
+  slf4j-jdk14.jar or logback-classic.jar
+  -->
   <build>
     <finalName>RESTfulApp</finalName>
     <plugins>

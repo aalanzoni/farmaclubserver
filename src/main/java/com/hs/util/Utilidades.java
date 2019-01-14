@@ -62,6 +62,26 @@ public class Utilidades {
     }
     
     /**
+     * Funcion que pasada la fecha en formato DB (aaaammdd) la retorna en formato String "dd-mm-aaaa"
+     * @param fechaBD
+     * @return
+     */
+    public static String diaMesAnioString(int fechaBD) {
+        String resultado = "";
+        if (fechaBD > 0) {
+            String fechaS = Integer.toString(fechaBD);
+            String anioS = fechaS.substring(0, 4).trim();
+            String mesS = fechaS.substring(4, 6).trim();
+            String diaS = fechaS.substring(6, 8).trim();
+            int dia = Integer.valueOf(diaS);
+            int mes = Integer.valueOf(mesS);
+            int anio = Integer.valueOf(anioS);
+            resultado = dia + "/" + mes + "/" + anio;
+        }
+        return resultado;
+    }    
+    
+    /**
      * Procedimiento que transforma un String dia/mes/anio en un 
      * entero enformato anio mes dia
      * @param fecha

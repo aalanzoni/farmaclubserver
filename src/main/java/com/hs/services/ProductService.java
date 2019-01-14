@@ -55,8 +55,7 @@ public class ProductService {
     @POST
     @Path("/getProducts")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    //public Response validaUsuario(Map<String, String> parametros) throws URISyntaxException {
+    @Consumes(MediaType.APPLICATION_JSON)    
     public Response getProductos(Map<String, String> parametros) throws URISyntaxException {
         JSONObject resp = new JSONObject();
 
