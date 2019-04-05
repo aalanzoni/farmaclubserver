@@ -1,5 +1,5 @@
 <html>
 <body>
-<h2>Hello Restful Web Application!</h2>
+<h2>Servidor FARMACLUB en linea!</h2>
 </body>
 </html>

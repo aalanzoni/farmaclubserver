@@ -13,7 +13,9 @@ import com.hs.util.Utilidades;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
@@ -89,20 +91,88 @@ public final class ControlUsuario {
         return resul;
     }
     
-    public static JSONObject updateCategoriasAsignadas(String tarjeta, Map<String, String> parametros) throws Exception{
+    public static JSONObject updateCategoriasAsignadas(String tarjeta, JSONObject parametros) throws Exception{
         JSONObject resul = new JSONObject();
         Statement stmt = null;
         ResultSet rs = null;
+        String sql = "";
+        int act = 0;
+        int del = 0;
         try{
             ConexionDirecta con = ConexionDirecta.getConexion();
             if(con != null){
-                
+                conf.getLogger().log(Level.INFO,"procedimiento updateCategoriasAsignadas, tarjeta: " + tarjeta );
+                ArrayList preferencias = (ArrayList)parametros.get("preferencias");
+               
+                for (int i = 0; i < preferencias.size(); i++) {
+                    
+                    LinkedHashMap cte = (LinkedHashMap)preferencias.get(i);
+                    
+                    int codigo = Integer.parseInt(cte.getOrDefault("codigo", 0).toString());
+                    int activa = Integer.parseInt(cte.getOrDefault("activa", 0).toString());
+                    if(codigo != 0){
+                        if(activa == 1){//se habilito o ya estaba
+                            if(!existePreferencia(tarjeta, codigo)){//se habilito
+                                sql = "insert into PREDAT values ('"+tarjeta+
+                                        "', " + codigo + ", NULL)";
+                                System.out.println("SQL Insert: " + sql);
+                                stmt = con.getConnection().createStatement();
+                                stmt.execute(sql);
+                                act ++;
+                            }
+                        }else{
+                            sql = "delete from PREDAT " + 
+                                  "where codtar_predat = '" + tarjeta + "' and " +
+                                        "codref_predat = " + codigo;
+                            System.out.println("SQL Update: " + sql);
+                            stmt = con.getConnection().createStatement();
+                            stmt.execute(sql);
+                            del ++;
+                        }                        
+                    }
+                }
+                resul.put("salida", 1);
+                resul.put("msj", "Categorias Actulizadas");
+                resul.put("Altas", act);
+                resul.put("Bajas", del);
             }
         }
         catch(Exception e){
-            
+            conf.getLogger().log(Level.SEVERE,"procedimiento getCategoriasAsignadas" + tarjeta, e);
+            Utilidades.sendErrorMail(e.getMessage());
+            resul.put("salida", 9);
+            resul.put("msj", "Error actualiza categorias: " + e.getMessage());
+            resul.put("Altas", 0);
+            resul.put("Bajas", 0);
+
+        }
+        finally{
+            if(stmt != null){
+                stmt.close();
+            }
         }
         return resul;
+    }
+    
+    private static boolean existePreferencia(String tarjeta, int preferencia) throws Exception{
+        boolean res = false;
+        Statement stmt = null;
+        ResultSet rs = null;
+        ConexionDirecta cd = ConexionDirecta.getConexion();
+        if(cd != null){
+            String sql = "select 1 as existe "+
+                         "from PREDAT with (nolock) "+
+                         "where codtar_predat = '" + tarjeta + "' and " +
+                         "codref_predat = " + preferencia;
+            stmt = cd.getConnection().createStatement();
+            rs = stmt.executeQuery(sql);
+            if(rs.isBeforeFirst())
+                res = true;
+        }
+        if (stmt != null) { 
+            stmt.close(); 
+        }
+        return res;
     }
     
     public static JSONObject getCategoriasAsignadas(String tarjeta) throws Exception{
@@ -112,18 +182,14 @@ public final class ControlUsuario {
         try{
             ConexionDirecta con = ConexionDirecta.getConexion();
             if(con != null){
-                String sql = "select codigo_catart, " + 
-                                    "nombre_catart, " +
-	                            "descripcion_catart, " +
-                                    "codtar_predat "+
-                             "from catart(nolock) left join " +
-                                  "predat(nolock) on " +
-                                     "codigo_catart = codref_predat " +
-                             "where estado_catart = 0 and " +
-                                "(codtar_predat = "+ tarjeta +" or " +
-                                 "codtar_predat is null)";
-                
-                System.out.println("SQL Update: " + sql);
+                String sql = "select codigo_prefer, " +
+                                    "des_prefer, " +
+                                    "codtar_predat " +
+                             "from prefer with (nolock) " +
+                                "left join PREDAT with (nolock) on " +
+                                "codigo_prefer = codref_predat and " +
+                                "codtar_predat = " + tarjeta;
+                System.out.println("getCategoriasAsignadas: " + sql);
                 conf.getLogger().log(Level.INFO,"procedimiento getCategoriasAsignadas, tarjeta: " + tarjeta + " SQL: " + sql);
                 
                 stmt = con.getConnection().createStatement();
@@ -133,12 +199,10 @@ public final class ControlUsuario {
                     int cant = 0;
                     while (rs.next()) {
                         JSONObject cte = new JSONObject();
-                        String codigo = rs.getString("codigo_catart");
-                        String categoria = rs.getString("nombre_catart");
-                        String descripcion = rs.getString("descripcion_catart");
+                        String codigo = rs.getString("codigo_prefer");
+                        String descripcion = rs.getString("des_prefer");
                         String activa = rs.getString("codtar_predat");
                         cte.put("codigo", codigo);
-                        cte.put("categoria", categoria);
                         cte.put("descripcion", descripcion);
                         if (activa == null || activa.trim().isEmpty()){
                             cte.put("activa", 0);
@@ -152,7 +216,7 @@ public final class ControlUsuario {
                     resul.put("salida", 1);
                     resul.put("msj", "OK");
                     resul.put("cantidad", cant);
-                    resul.put("categorias", categorias);
+                    resul.put("preferencias", categorias);
                 }
                 
             }
@@ -612,12 +676,34 @@ public final class ControlUsuario {
 
     public static void main (String args[]){
 
-        ControlUsuario cu = new ControlUsuario();
+        JSONObject resul = new JSONObject();
+        Statement stmt = null;
+        ResultSet rs = null;
         try{
-            cu.resetPass("12345678");
+            ConexionDirecta con = ConexionDirecta.getConexion();
+            String sql = "select 1 as existe from predat where codtar_predat = '147' and codref_predat = 22";
+            stmt = con.getConnection().createStatement();
+            rs = stmt.executeQuery(sql);
+            if(rs.isBeforeFirst())
+                System.out.println("EXISTE");
+            else
+                System.out.println("NO EXISTE");
+
         }
         catch(Exception e){
             e.printStackTrace();
+            
+            /***
+             * String sql = "select 1 as existe, nom_datos9 from DATOS9(nolock) where estado_datos9 = 0 and codtar_datos9 = '" + tarjeta + "'";
+                conf.getLogger().log(Level.INFO,"procedimiento existeTarjeta" + tarjeta + " SQL: " + sql);
+                stmt = con.getConnection().createStatement();
+                rs = stmt.executeQuery(sql);
+                *  if(rs.isBeforeFirst())
+                    while (rs.next()) {
+                        String localizado = rs.getString("valido");
+
+                        if(localizado.compareTo("1") == 0){
+             */
         }
 
 //        String tarjeta = "12345678";

@@ -72,8 +72,11 @@ public class Crypto {
     
     public static void main(String a[]){
         try{
-            String encriptado = Crypto.Encriptar("highsoft852");
-            System.out.println("Cript: "+encriptado);
+            String encriptado = Crypto.Encriptar("highsoft");
+            System.out.println("Usuario: "+encriptado);
+            
+            encriptado = Crypto.Encriptar("H16h50ft852!");
+            System.out.println("Pass: "+encriptado);
         
             String desencriptado = Crypto.Desencriptar(encriptado);
             System.out.println("desCript: "+desencriptado);

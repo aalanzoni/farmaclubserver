@@ -39,6 +39,11 @@ public class Configuracion {
     private static String letra_p = "";
     private static String letra_x = "";
     
+    private Integer fileSizeLimit = 1024;
+    private int fileCount = 5;
+    private boolean append = true;
+    private int level = 100;
+    
     
     private Logger logger;
     
@@ -85,9 +90,27 @@ public class Configuracion {
             letra_p = propiedades.get("P").toString();
             letra_x = propiedades.get("X").toString();
             
-            FileHandler fileHandler = new FileHandler(Configuracion.getLog(), true);
+            fileSizeLimit = Integer.parseInt(propiedades.get("fileSizeLimit").toString());
+            fileCount = Integer.parseInt(propiedades.get("fileCount").toString());
+            append = Boolean.parseBoolean(propiedades.get("append").toString());
+            level = Integer.parseInt(propiedades.get("level").toString());
+            
+            FileHandler fileHandler = new FileHandler(Configuracion.getLog(), fileSizeLimit, fileCount, append);
             fileHandler.setFormatter(new SimpleFormatter());
             this.logger.addHandler(fileHandler);
+            switch(level){
+                case 1:
+                    this.logger.setLevel(Level.ALL);
+                    break;
+                case 2:
+                    this.logger.setLevel(Level.INFO);
+                    break;
+                case 3:
+                    this.logger.setLevel(Level.SEVERE);
+                    break;
+                default:
+                    this.logger.setLevel(Level.ALL);                    
+            }
         }
         catch(Exception ioe){
             ioe.printStackTrace();
@@ -98,9 +121,10 @@ public class Configuracion {
     }
     
     public static void main(String a[]){
-        Configuracion.getConfig();
-        Configuracion.getConfig();
-        Configuracion.getConfig();
+        System.out.println("Level.FINEST: " + Level.FINEST);
+//        Configuracion.getConfig();
+//        Configuracion.getConfig();
+//        Configuracion.getConfig();
     }
     
     
