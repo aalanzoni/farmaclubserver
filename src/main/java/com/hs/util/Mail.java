@@ -147,7 +147,7 @@ public class Mail extends Thread {
                 String imagen = im.get(i);
                 // Procesar la imagen
                 MimeBodyPart imagenBP = new MimeBodyPart();
-                imagenBP.attachFile(imagen);
+                imagenBP.attachFile(this.conf.getRoot_base() + imagen);
                 imagenBP.setHeader("Content-ID","<figura1>");
                 multipart.addBodyPart(imagenBP);
             }
@@ -258,7 +258,8 @@ public class Mail extends Thread {
             }
             
             if(this.tipo == Constantes.MAIL_BIENVENIDA){
-                this.mensaje = propiedades.get("msj_bienvenida").toString();
+                this.mensaje = this.conf.getRoot_base() + 
+                        propiedades.get("msj_bienvenida").toString();
             }
             props.put("mail.smtp.host", this.servidorSMTP);        // El servidor SMTP de Google    
             props.put("mail.smtp.user", this.remitente);           // Nombre del usuario

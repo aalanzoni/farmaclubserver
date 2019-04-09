@@ -5,6 +5,7 @@
  */
 package com.hs.util;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.FileHandler;
@@ -19,6 +20,7 @@ import java.util.logging.SimpleFormatter;
  */
 public class Configuracion {
     private static String ip = "";
+    private static String root_base = "";
     private static String imagenes = "";
     private static String baseBackup="";
     private static String reportes = "";
@@ -60,7 +62,6 @@ public class Configuracion {
     
     public Configuracion() {
         try{
-            //\restfull-web-services-app-master\src\main\resources\farmacia.properties
             String resourceName = "farmacia.properties"; 
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
             Properties propiedades = new Properties();
@@ -69,7 +70,8 @@ public class Configuracion {
             
             this.logger = Logger.getLogger(Configuracion.class.getName());
                         
-            ip = propiedades.get("ip").toString();        
+            ip = propiedades.get("ip").toString();
+            root_base = propiedades.get("root_base").toString();
             imagenes = propiedades.get("imagenes").toString();
             baseBackup = propiedades.get("baseBackup").toString();
             reportes = propiedades.get("reportes").toString();
@@ -95,7 +97,8 @@ public class Configuracion {
             append = Boolean.parseBoolean(propiedades.get("append").toString());
             level = Integer.parseInt(propiedades.get("level").toString());
             
-            FileHandler fileHandler = new FileHandler(Configuracion.getLog(), fileSizeLimit, fileCount, append);
+            //FileHandler fileHandler = new FileHandler(Configuracion.getLog(), fileSizeLimit, fileCount, append);
+            FileHandler fileHandler = new FileHandler(Configuracion.getLog(), true);
             fileHandler.setFormatter(new SimpleFormatter());
             this.logger.addHandler(fileHandler);
             switch(level){
@@ -122,7 +125,15 @@ public class Configuracion {
     
     public static void main(String a[]){
         System.out.println("Level.FINEST: " + Level.FINEST);
-//        Configuracion.getConfig();
+        try{
+            File f = new File("d:\\Debo fotos y videos 20180813\\IMG_20180809_134418.jpg");
+            if(f.exists())
+                System.out.println("EXISTE HUEVON!!");
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+//        Configuracion.g(etConfig();
 //        Configuracion.getConfig();
 //        Configuracion.getConfig();
     }
@@ -131,9 +142,31 @@ public class Configuracion {
     /**
      * @return String
      */
-    public static String getIp() {
+    public String getIp() {
             return ip;
     }
+
+    public String getRoot_base() {
+        return root_base;
+    }
+
+    public Integer getFileSizeLimit() {
+        return fileSizeLimit;
+    }
+
+    public int getFileCount() {
+        return fileCount;
+    }
+
+    public boolean isAppend() {
+        return append;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+    
+    
     /**
      * @return String
      */

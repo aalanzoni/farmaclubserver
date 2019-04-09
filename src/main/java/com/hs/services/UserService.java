@@ -2,18 +2,14 @@ package com.hs.services;
 
 import com.hs.control.ControlUsuario;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import com.hs.model.User;
@@ -53,59 +49,7 @@ public class UserService {
     public String getStub() {
         return "lalala";
     }
-
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/all")
-    public Response getAllUsers(@QueryParam("page") @DefaultValue("1") final String page) {
-        // # See all the users in the system
-        // > curl -X GET http://localhost:8080/RESTfulApp/rest/user/all?page=3
-        List<User> users = new ArrayList<User>();
-        final User user1 = new User("1", "Tom", "Jenkins", "tom.jenkins@gmail.com");
-        final User user2 = new User("2", "Red", "Balloon", "red.balloon@gmail.com");
-        final User user3 = new User("3", "Red", "Balloon", "red.balloon@gmail.com");
-        final User user4 = new User("4", "Red", "Balloon", "red.balloon@gmail.com");
-        final User user5 = new User("5", "Red", "Balloon", "red.balloon@gmail.com");
-
-        users.add(user1);
-        users.add(user2);
-        users.add(user3);
-        users.add(user4);
-        users.add(user5);
-
-        return Response.ok(users).build();
-    }
-
-    @POST
-    @Path("/create")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response createUser(final User user) throws URISyntaxException {
-        // # Create and save new user
-        // > curl -X POST http://localhost:8080/RESTfulApp/rest/user/create
-        return Response.ok(user).build();
-    }
-
-//        @GET
-//        @Path("/existeTarjeta")
-//        @Consumes(MediaType.TEXT_PLAIN)
-//	@Produces(MediaType.APPLICATION_JSON)
-//	public Response existeTarjeta(String tarjeta) throws URISyntaxException {
-//            JSONObject resp = new JSONObject();
-//            if(tarjeta.length() > 1){
-//                try{
-//                    resp = ControlUsuario.existeTarjeta(tarjeta);
-//                }
-//                catch(Exception e){
-//                    resp = new JSONObject();
-//                    resp.put("salida", 9);
-//                    resp.put("msj", e.toString());
-//                    e.printStackTrace();
-//                }
-//            }
-//            return Response.ok(resp).build();
-//        }
+    
     @POST
     @Path("/actualizaDatos")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -303,7 +247,8 @@ public class UserService {
     @Path("/licencia")
     @Produces("application/pdf")
     public Response getLicencia() {
-        String file_licencia = Configuracion.getConfig().getLicencia();
+        String file_licencia = Configuracion.getConfig().getRoot_base() +
+                Configuracion.getConfig().getLicencia();
         Response.ResponseBuilder response;
         if (file_licencia.isEmpty() == false) {
             File file = new File(file_licencia);
