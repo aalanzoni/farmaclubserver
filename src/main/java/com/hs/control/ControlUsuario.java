@@ -199,7 +199,7 @@ public final class ControlUsuario {
                     int cant = 0;
                     while (rs.next()) {
                         JSONObject cte = new JSONObject();
-                        String codigo = rs.getString("codigo_prefer");
+                        int codigo = Integer.parseInt(rs.getString("codigo_prefer"));
                         String descripcion = rs.getString("des_prefer");
                         String activa = rs.getString("codtar_predat");
                         cte.put("codigo", codigo);

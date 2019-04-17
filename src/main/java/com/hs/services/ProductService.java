@@ -120,6 +120,74 @@ public class ProductService {
     }
 
     @POST
+    @Path("/getProductsPrefer")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)    
+    public Response getProductosPreferencias(Map<String, String> parametros) throws URISyntaxException {
+        JSONObject resp = new JSONObject();
+
+        String from = parametros.get("from");
+        String to = parametros.get("to");
+        String orderBy = parametros.get("orderBy");
+        String para = parametros.get("para");
+        String categorias = parametros.get("categorias");
+
+        if (from == null || from.isEmpty() || to == null || to.isEmpty() || orderBy == null || orderBy.isEmpty() || para == null || para.isEmpty() || categorias == null || categorias.isEmpty()) {
+            resp.put("salida", 9);
+            resp.put("msj", "No encuentra parametros de entrada (from - to - orderBy - para = 'C'anje,'P'romocion - categorias)");
+            return Response.ok(resp).build();
+        }
+        int desde = Integer.parseInt(from);
+        int hasta = Integer.parseInt(to);
+
+        if (desde > hasta) {
+            resp.put("salida", 8);
+            resp.put("msj", "Error en parametros (from < to)");
+            return Response.ok(resp).build();
+        }
+
+        String orden = "";
+        String[] parts = orderBy.split(",");
+        String var = parts[0];
+        String order = parts[1];
+        
+        if (var.compareTo("codigo") == 0) {
+            orden += "codigo_tarart";
+        }
+
+        if (var.compareTo("nombre") == 0) {
+            orden += "descri_tarart";
+        }
+
+        if (var.compareTo("puntos") == 0) {
+            orden += "puntos_tarart";
+        }
+
+        if (orden.isEmpty()) {
+            resp.put("salida", 9);
+            resp.put("msj", "Parametro de Orden Incorrecto (codigo, nombre, puntos)");
+            return Response.ok(resp).build();
+        }
+
+        if (order.compareTo("asc") == 0) {
+            orden += " asc";
+        } else {
+            orden += " desc";
+        }
+
+        try {
+            ControlProducto cp = new ControlProducto();
+            resp = cp.getProductosCategorias(desde, hasta, orden, para, categorias);
+            return Response.ok(resp).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.put("salida", 9);
+            resp.put("msj", "Error");
+            return Response.ok(resp).build();
+        }
+    }
+    
+    @POST
     @Path("/getCanjesXPuntos")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)

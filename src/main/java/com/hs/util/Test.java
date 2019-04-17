@@ -76,6 +76,11 @@ public class Test {
 }
     
     public static void main(String[] arg) throws IOException {
+        String path = "X:\\FARMACIA1\\IMAGENES\\47 STREET.JPG";
+        String[] parts = path.split("\\\\");
+        System.out.println("Contiene: " + path.contains("\\"));
+        System.out.println("Long: "+parts.length);
+        System.out.println("tengo: "+parts[parts.length - 1]);
 //        try{
 //            File image = new File("c:\\imagenes\\banderas_g.jpg");
 //            File salida = new File("c:\\imagenes\\banderas_formateado.jpg");
@@ -93,30 +98,30 @@ public class Test {
 //        catch(Exception e){
 //            e.printStackTrace();
 //        }
-            File folder = new File("c:\\imagenes\\");
-	    File[] listOfFiles = folder.listFiles();
-		System.out.println("Total No of Files:"+listOfFiles.length);
-		Image img = null;
-		BufferedImage tempPNG = null;
-		BufferedImage tempJPG = null;
-		File newFilePNG = null;
-		File newFileJPG = null;
-		for (int i = 0; i < listOfFiles.length; i++) {
-		      if (listOfFiles[i].isFile()) {
-		        System.out.println("File " + listOfFiles[i].getName());
-		        img = ImageIO.read(new File("c:\\imagenes\\"+listOfFiles[i].getName()));
-                        
-                        double aspectRatio = (double) img.getWidth(null)/(double) img.getHeight(null);
-                        tempPNG = resizeImage(img, 100, (int) (100/aspectRatio));
-                        tempJPG = resizeImage(img, 100, (int) (100/aspectRatio));
-                        
-		        newFilePNG = new File("c:/imagenes/resize/"+listOfFiles[i].getName()+"_New.png");
-		        newFileJPG = new File("c:/imagenes/resize/"+listOfFiles[i].getName()+"_New.jpg");
-		        ImageIO.write(tempPNG, "png", newFilePNG);
-		        ImageIO.write(tempJPG, "jpg", newFileJPG);
-		      }
-		}
-		System.out.println("DONE");
+//            File folder = new File("c:\\imagenes\\");
+//	    File[] listOfFiles = folder.listFiles();
+//		System.out.println("Total No of Files:"+listOfFiles.length);
+//		Image img = null;
+//		BufferedImage tempPNG = null;
+//		BufferedImage tempJPG = null;
+//		File newFilePNG = null;
+//		File newFileJPG = null;
+//		for (int i = 0; i < listOfFiles.length; i++) {
+//		      if (listOfFiles[i].isFile()) {
+//		        System.out.println("File " + listOfFiles[i].getName());
+//		        img = ImageIO.read(new File("c:\\imagenes\\"+listOfFiles[i].getName()));
+//                        
+//                        double aspectRatio = (double) img.getWidth(null)/(double) img.getHeight(null);
+//                        tempPNG = resizeImage(img, 100, (int) (100/aspectRatio));
+//                        tempJPG = resizeImage(img, 100, (int) (100/aspectRatio));
+//                        
+//		        newFilePNG = new File("c:/imagenes/resize/"+listOfFiles[i].getName()+"_New.png");
+//		        newFileJPG = new File("c:/imagenes/resize/"+listOfFiles[i].getName()+"_New.jpg");
+//		        ImageIO.write(tempPNG, "png", newFilePNG);
+//		        ImageIO.write(tempJPG, "jpg", newFileJPG);
+//		      }
+//		}
+//		System.out.println("DONE");
 	}
 
 	/**
